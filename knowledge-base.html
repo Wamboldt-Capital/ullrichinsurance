@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base - Noah's Toolbox</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f5f5f5; 
+            color: #333;
+        }
+        
+        .loading-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0a84ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            max-width: 500px;
+            margin: 100px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .error-screen h2 { color: #ff3b30; margin-bottom: 20px; }
+        .error-screen p { color: #666; margin-bottom: 30px; line-height: 1.6; }
+        .error-screen a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #0a84ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .error-screen a:hover { background: #0077ed; }
+        
+        .container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #0a84ff;
+            font-size: 24px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background: #0a84ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover { background: #0077ed; }
+        .btn.secondary { background: #6c757d; }
+        .btn.secondary:hover { background: #5a6268; }
+        .btn.success { background: #10b981; }
+        .btn.success:hover { background: #059669; }
+        
+        .search-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #0a84ff;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .category {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0a84ff;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0a84ff;
+        }
+        
+        .category-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            color: #666;
+        }
+        
+        .icon-btn:hover { color: #0a84ff; }
+        .icon-btn.delete:hover { color: #ff3b30; }
+        
+        .articles {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .article {
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .article:hover { background: #e5e7eb; }
+        
+        .article-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .article-preview {
+            font-size: 14px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .add-article-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .add-article-btn:hover {
+            background: #e5e7eb;
+            border-color: #0a84ff;
+            color: #0a84ff;
+        }
+        
+        .add-category-card {
+            background: white;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-category-card:hover {
+            border-color: #0a84ff;
+            background: #f9fafb;
+        }
+        
+        .add-category-text {
+            font-size: 18px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .add-category-card:hover .add-category-text {
+            color: #0a84ff;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #0a84ff;
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close-modal:hover { color: #333; }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            min-height: 300px;
+            resize: vertical;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0a84ff;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 2000;
+            display: none;
+        }
+        
+        .status.show { display: block; }
+        .status.error { background: #ef4444; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Loading Knowledge Base...</p>
+    </div>
+
+    <div class="error-screen" id="errorScreen">
+        <h2>⚠️ Access Denied</h2>
+        <p id="errorMessage">Your session is invalid or has expired.</p>
+        <p>Please log in to access the knowledge base.</p>
+        <a href="index.html">Go to Login Page</a>
+    </div>
+
+    <div class="container" id="mainContent">
+        <div class="status" id="status"></div>
+        
+        <div class="header">
+            <div>
+                <h1>📚 Knowledge Base</h1>
+                <p style="color: #666; margin-top: 5px;">User: <span id="currentUser"></span></p>
+            </div>
+            <div class="header-buttons">
+                <a href="toolbox.html" class="btn secondary">Back to Toolbox</a>
+                <button class="btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search articles...">
+        </div>
+
+        <div class="categories" id="categoriesContainer"></div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">New Category</h2>
+                <button class="close-modal" id="closeCategoryModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="categoryNameInput">Category Name</label>
+                <input type="text" id="categoryNameInput" placeholder="e.g., Policy Guidelines, Claims Process">
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary" id="cancelCategoryBtn">Cancel</button>
+                <button class="btn success" id="saveCategoryBtn">Save Category</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Article Modal -->
+    <div id="articleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="articleModalTitle">New Article</h2>
+                <button class="close-modal" id="closeArticleModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="articleTitleInput">Article Title</label>
+                <input type="text" id="articleTitleInput" placeholder="Enter article title">
+            </div>
+            <div class="form-group">
+                <label for="articleContentInput">Content</label>
+                <textarea id="articleContentInput" placeholder="Enter article content..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary" id="deleteArticleBtn" style="margin-right: auto; display: none;">Delete Article</button>
+                <button class="btn secondary" id="cancelArticleBtn">Cancel</button>
+                <button class="btn success" id="saveArticleBtn">Save Article</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
+            
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Session validation
+            async function validateSession(sessionToken) {
+                if (!sessionToken) return null;
+                const result = await supabase
+                    .from('sessions')
+                    .select('*, users(*)')
+                    .eq('session_token', sessionToken)
+                    .gt('expires_at', new Date().toISOString())
+                    .single();
+                return result.error || !result.data ? null : result.data.users;
+            }
+
+            async function deleteSession(sessionToken) {
+                if (!sessionToken) return;
+                await supabase.from('sessions').delete().eq('session_token', sessionToken);
+                localStorage.removeItem('sessionToken');
+                sessionStorage.removeItem('sessionToken');
+            }
+
+            function showError(message) {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('errorScreen').style.display = 'block';
+                document.getElementById('errorMessage').textContent = message;
+            }
+
+            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+            if (!sessionToken) {
+                showError('No active session found. Please log in.');
+                return;
+            }
+
+            const user = await validateSession(sessionToken);
+            if (!user) {
+                showError('Your session is invalid or has expired. Please log in again.');
+                localStorage.removeItem('sessionToken');
+                sessionStorage.removeItem('sessionToken');
+                return;
+            }
+
+            // Show main content
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('currentUser').textContent = user.display_name || user.username;
+
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    await deleteSession(sessionToken);
+                    window.location.href = 'https://ireallylovetexas.github.io/ullrichinsurance/';
+                }
+            });
+
+            // Knowledge base logic
+            let categories = [];
+            let currentCategoryId = null;
+            let currentArticleId = null;
+            let editingCategoryId = null;
+
+            function showStatus(message, type = 'success') {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = message;
+                statusEl.className = `status show ${type === 'error' ? 'error' : ''}`;
+                setTimeout(() => statusEl.className = 'status', 3000);
+            }
+
+            async function loadKnowledgeBase() {
+                const { data, error } = await supabase
+                    .from('knowledge_base')
+                    .select('*')
+                    .order('category_order');
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Error loading knowledge base:', error);
+                    showStatus('Error loading knowledge base', 'error');
+                    return;
+                }
+
+                categories = data || [];
+                renderCategories();
+            }
+
+            function renderCategories(searchTerm = '') {
+                const container = document.getElementById('categoriesContainer');
+                container.innerHTML = '';
+
+                const filteredCategories = categories.map(cat => {
+                    const filteredArticles = cat.articles.filter(article => {
+                        if (!searchTerm) return true;
+                        const search = searchTerm.toLowerCase();
+                        return article.title.toLowerCase().includes(search) || 
+                               article.content.toLowerCase().includes(search);
+                    });
+                    return { ...cat, filteredArticles };
+                }).filter(cat => searchTerm === '' || cat.filteredArticles.length > 0);
+
+                if (filteredCategories.length === 0 && categories.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <h3>No categories yet</h3>
+                            <p>Click the button below to create your first category</p>
+                        </div>
+                    `;
+                }
+
+                filteredCategories.forEach(category => {
+                    const categoryEl = document.createElement('div');
+                    categoryEl.className = 'category';
+                    
+                    const articlesToShow = searchTerm ? category.filteredArticles : category.articles;
+                    
+                    categoryEl.innerHTML = `
+                        <div class="category-header">
+                            <div class="category-title">${category.category_name}</div>
+                            <div class="category-actions">
+                                <button class="icon-btn edit-category" data-id="${category.id}">✏️</button>
+                                <button class="icon-btn delete delete-category" data-id="${category.id}">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="articles">
+                            ${articlesToShow.map(article => `
+                                <div class="article" data-category-id="${category.id}" data-article-id="${article.id}">
+                                    <div class="article-title">${article.title}</div>
+                                    <div class="article-preview">${article.content.substring(0, 100)}...</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="add-article-btn" data-category-id="${category.id}">+ Add Article</button>
+                    `;
+                    
+                    container.appendChild(categoryEl);
+                });
+
+                // Add "Add Category" card
+                const addCategoryCard = document.createElement('div');
+                addCategoryCard.className = 'add-category-card';
+                addCategoryCard.innerHTML = '<div class="add-category-text">+ Add Category</div>';
+                addCategoryCard.addEventListener('click', () => openCategoryModal());
+                container.appendChild(addCategoryCard);
+
+                // Event listeners
+                document.querySelectorAll('.edit-category').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const categoryId = btn.dataset.id;
+                        const category = categories.find(c => c.id === categoryId);
+                        openCategoryModal(category);
+                    });
+                });
+
+                document.querySelectorAll('.delete-category').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const categoryId = btn.dataset.id;
+                        const category = categories.find(c => c.id === categoryId);
+                        if (confirm(`Delete category "${category.category_name}" and all its articles?`)) {
+                            await deleteCategory(categoryId);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.add-article-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        currentCategoryId = btn.dataset.categoryId;
+                        openArticleModal();
+                    });
+                });
+
+                document.querySelectorAll('.article').forEach(article => {
+                    article.addEventListener('click', () => {
+                        const categoryId = article.dataset.categoryId;
+                        const articleId = article.dataset.articleId;
+                        const category = categories.find(c => c.id === categoryId);
+                        const articleData = category.articles.find(a => a.id === articleId);
+                        openArticleModal(categoryId, articleData);
+                    });
+                });
+            }
+
+            function openCategoryModal(category = null) {
+                editingCategoryId = category ? category.id : null;
+                document.getElementById('categoryModalTitle').textContent = category ? 'Edit Category' : 'New Category';
+                document.getElementById('categoryNameInput').value = category ? category.category_name : '';
+                document.getElementById('categoryModal').style.display = 'block';
+            }
+
+            function closeCategoryModal() {
+                document.getElementById('categoryModal').style.display = 'none';
+                editingCategoryId = null;
+            }
+
+            function openArticleModal(categoryId = null, article = null) {
+                currentCategoryId = categoryId || currentCategoryId;
+                currentArticleId = article ? article.id : null;
+                
+                document.getElementById('articleModalTitle').textContent = article ? 'Edit Article' : 'New Article';
+                document.getElementById('articleTitleInput').value = article ? article.title : '';
+                document.getElementById('articleContentInput').value = article ? article.content : '';
+                document.getElementById('deleteArticleBtn').style.display = article ? 'block' : 'none';
+                document.getElementById('articleModal').style.display = 'block';
+            }
+
+            function closeArticleModal() {
+                document.getElementById('articleModal').style.display = 'none';
+                currentCategoryId = null;
+                currentArticleId = null;
+            }
+
+            async function saveCategory() {
+                const name = document.getElementById('categoryNameInput').value.trim();
+                if (!name) {
+                    showStatus('Please enter a category name', 'error');
+                    return;
+                }
+
+                if (editingCategoryId) {
+                    // Update existing category
+                    const category = categories.find(c => c.id === editingCategoryId);
+                    category.category_name = name;
+                    
+                    const { error } = await supabase
+                        .from('knowledge_base')
+                        .update({ category_name: name })
+                        .eq('id', editingCategoryId);
+
+                    if (error) {
+                        showStatus('Error updating category', 'error');
+                        return;
+                    }
+                    showStatus('Category updated!');
+                } else {
+                    // Create new category
+                    const newCategory = {
+                        category_name: name,
+                        articles: [],
+                        category_order: categories.length
+                    };
+
+                    const { data, error } = await supabase
+                        .from('knowledge_base')
+                        .insert([newCategory])
+                        .select()
+                        .single();
+
+                    if (error) {
+                        showStatus('Error creating category', 'error');
+                        return;
+                    }
+                    
+                    categories.push(data);
+                    showStatus('Category created!');
+                }
+
+                closeCategoryModal();
+                renderCategories();
+            }
+
+            async function deleteCategory(categoryId) {
+                const { error } = await supabase
+                    .from('knowledge_base')
+                    .delete()
+                    .eq('id', categoryId);
+
+                if (error) {
+                    showStatus('Error deleting category', 'error');
+                    return;
+                }
+
+                categories = categories.filter(c => c.id !== categoryId);
+                showStatus('Category deleted');
+                renderCategories();
+            }
+
+            async function saveArticle() {
+                const title = document.getElementById('articleTitleInput').value.trim();
+                const content = document.getElementById('articleContentInput').value.trim();
+
+                if (!title || !content) {
+                    showStatus('Please enter both title and content', 'error');
+                    return;
+                }
+
+                const category = categories.find(c => c.id === currentCategoryId);
+                
+                if (currentArticleId) {
+                    // Update existing article
+                    const article = category.articles.find(a => a.id === currentArticleId);
+                    article.title = title;
+                    article.content = content;
+                } else {
+                    // Add new article
+                    const newArticle = {
+                        id: Date.now().toString(),
+                        title,
+                        content,
+                        created_at: new Date().toISOString()
+                    };
+                    category.articles.push(newArticle);
+                }
+
+                const { error } = await supabase
+                    .from('knowledge_base')
+                    .update({ articles: category.articles })
+                    .eq('id', currentCategoryId);
+
+                if (error) {
+                    showStatus('Error saving article', 'error');
+                    return;
+                }
+
+                showStatus(currentArticleId ? 'Article updated!' : 'Article created!');
+                closeArticleModal();
+                renderCategories();
+            }
+
+            async function deleteArticle() {
+                if (!confirm('Delete this article?')) return;
+
+                const category = categories.find(c => c.id === currentCategoryId);
+                category.articles = category.articles.filter(a => a.id !== currentArticleId);
+
+                const { error } = await supabase
+                    .from('knowledge_base')
+                    .update({ articles: category.articles })
+                    .eq('id', currentCategoryId);
+
+                if (error) {
+                    showStatus('Error deleting article', 'error');
+                    return;
+                }
+
+                showStatus('Article deleted');
+                closeArticleModal();
+                renderCategories();
+            }
+
+            // Event listeners
+            document.getElementById('closeCategoryModal').addEventListener('click', closeCategoryModal);
+            document.getElementById('cancelCategoryBtn').addEventListener('click', closeCategoryModal);
+            document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
+
+            document.getElementById('closeArticleModal').addEventListener('click', closeArticleModal);
+            document.getElementById('cancelArticleBtn').addEventListener('click', closeArticleModal);
+            document.getElementById('saveArticleBtn').addEventListener('click', saveArticle);
+            document.getElementById('deleteArticleBtn').addEventListener('click', deleteArticle);
+
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderCategories(e.target.value);
+            });
+
+            // Close modals on outside click
+            window.addEventListener('click', (e) => {
+                if (e.target.id === 'categoryModal') closeCategoryModal();
+                if (e.target.id === 'articleModal') closeArticleModal();
+            });
+
+            // Load initial data
+            await loadKnowledgeBase();
+        })();
+    </script>
+</body>
+</html>
