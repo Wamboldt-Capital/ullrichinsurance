@@ -48,7 +48,6 @@
         .add-user-btn { padding: 10px 20px; background: #0a84ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 10px; width: 100%; }
         .add-user-btn:hover { background: #0077ed; }
         
-        .password-section { margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 6px; }
         .toolbox-link { padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 20px; }
         .toolbox-link:hover { background: #059669; }
 
@@ -163,7 +162,6 @@
         let currentUser = null;
         let selectedUserForPasswordChange = null;
 
-        // Session token length
         const SESSION_TOKEN_LENGTH = 64;
         const SESSION_DURATION_DAYS = 30;
 
@@ -186,7 +184,6 @@
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + (rememberMe ? SESSION_DURATION_DAYS : 1));
 
-            // Store session in Supabase
             const result = await supabaseClient.from('sessions').insert([{
                 session_token: sessionToken,
                 username: username,
@@ -199,7 +196,6 @@
                 return null;
             }
 
-            // Store session token in browser
             if (rememberMe) {
                 localStorage.setItem('sessionToken', sessionToken);
             } else {
@@ -251,7 +247,6 @@
             return window.location.origin + directory;
         }
 
-        // Show/Hide Password toggles
         document.getElementById('showPasswordBtn').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             if (passwordInput.type === 'password') {
@@ -318,7 +313,6 @@
                     return;
                 }
 
-                // Create session
                 const sessionToken = await createSession(username, rememberMe);
                 if (!sessionToken) {
                     errorMessage.textContent = 'Failed to create session';
@@ -344,10 +338,8 @@
         });
 
         window.addEventListener('load', async function() {
-            // Clean up expired sessions periodically
             await cleanupExpiredSessions();
 
-            // Check for existing session
             const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
             if (sessionToken) {
                 const user = await validateSession(sessionToken);
@@ -359,7 +351,6 @@
                         redirectToToolbox();
                     }
                 } else {
-                    // Invalid or expired session
                     localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('sessionToken');
                 }
@@ -375,9 +366,7 @@
         }
 
         function redirectToToolbox() {
-            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-            const toolboxUrl = getBaseUrl() + 'toolbox.html?session=' + encodeURIComponent(sessionToken);
-            window.location.href = toolboxUrl;
+            window.location.href = getBaseUrl() + 'toolbox.html';
         }
 
         document.getElementById('goToToolboxBtn').addEventListener('click', function() {
@@ -389,11 +378,8 @@
         async function logout() {
             const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
             await deleteSession(sessionToken);
-            
             currentUser = null;
-            
-            const loginUrl = getBaseUrl() + 'index.html';
-            window.location.href = loginUrl;
+            window.location.href = getBaseUrl() + 'index.html';
         }
 
         async function loadUsers() {
@@ -502,7 +488,6 @@
                     return;
                 }
 
-                // Invalidate all sessions for this user
                 await supabaseClient
                     .from('sessions')
                     .delete()
@@ -561,10 +546,8 @@
         async function deleteUser(username) {
             if (!confirm('Delete user ' + username + '?')) return;
             
-            // Delete all sessions for this user
             await supabaseClient.from('sessions').delete().eq('username', username);
             
-            // Delete the user
             const result = await supabaseClient.from('users').delete().eq('username', username);
             if (result.error) {
                 alert('Error deleting user: ' + result.error.message);
