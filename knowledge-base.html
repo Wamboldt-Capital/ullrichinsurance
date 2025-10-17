@@ -232,13 +232,15 @@
             line-height: 1.8;
             color: #333;
             white-space: pre-wrap;
-            margin-bottom: 40px;
+            padding-bottom: 30px;
         }
         
         .archive-section {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 3px solid #e5e7eb;
+            margin-top: 20px;
+            padding: 30px;
+            background: #fffbeb;
+            border-radius: 8px;
+            border: 2px solid #fbbf24;
         }
         
         .archive-header {
@@ -246,41 +248,39 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #fbbf24;
         }
         
         .archive-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #666;
+            font-size: 20px;
+            font-weight: 700;
+            color: #92400e;
         }
         
         .archive-badge {
-            background: #fbbf24;
+            background: #f59e0b;
             color: white;
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            text-transform: uppercase;
         }
         
         .archive-content {
             font-size: 15px;
             line-height: 1.8;
-            color: #666;
+            color: #78350f;
             white-space: pre-wrap;
-            background: #fef3c7;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #fbbf24;
         }
         
         .archive-empty {
-            color: #999;
+            color: #a16207;
             font-style: italic;
             padding: 20px;
             text-align: center;
-            background: #f9fafb;
-            border-radius: 8px;
+            font-size: 14px;
         }
         
         /* Modal */
@@ -429,6 +429,14 @@
                 </div>
             </div>
             <div class="article-view-content" id="viewArticleContent"></div>
+            
+            <div class="archive-section">
+                <div class="archive-header">
+                    <div class="archive-title">📦 Archive</div>
+                    <div class="archive-badge">OLD INFO</div>
+                </div>
+                <div class="archive-content" id="viewArticleArchive"></div>
+            </div>
         </div>
     </div>
 
@@ -446,6 +454,10 @@
             <div class="form-group">
                 <label for="articleContentInput">Content</label>
                 <textarea id="articleContentInput" placeholder="Enter article content..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="articleArchiveInput">Archive (Old/Outdated Information)</label>
+                <textarea id="articleArchiveInput" placeholder="Enter old or outdated information here..." style="min-height: 200px;"></textarea>
             </div>
             <div class="modal-actions">
                 <button class="btn secondary" id="cancelArticleBtn">Cancel</button>
@@ -593,6 +605,15 @@
                 currentArticleId = articleId;
                 document.getElementById('viewArticleTitle').textContent = article.title;
                 document.getElementById('viewArticleContent').textContent = article.content;
+                
+                const archiveEl = document.getElementById('viewArticleArchive');
+                if (article.archive && article.archive.trim()) {
+                    archiveEl.textContent = article.archive;
+                    archiveEl.className = 'archive-content';
+                } else {
+                    archiveEl.textContent = 'No archived information';
+                    archiveEl.className = 'archive-empty';
+                }
 
                 document.getElementById('listView').style.display = 'none';
                 document.getElementById('articleView').style.display = 'block';
@@ -609,6 +630,7 @@
                 document.getElementById('articleModalTitle').textContent = article ? 'Edit Article' : 'New Article';
                 document.getElementById('articleTitleInput').value = article ? article.title : '';
                 document.getElementById('articleContentInput').value = article ? article.content : '';
+                document.getElementById('articleArchiveInput').value = article ? (article.archive || '') : '';
                 document.getElementById('articleModal').style.display = 'block';
             }
 
@@ -620,6 +642,7 @@
             async function saveArticle() {
                 const title = document.getElementById('articleTitleInput').value.trim();
                 const content = document.getElementById('articleContentInput').value.trim();
+                const archive = document.getElementById('articleArchiveInput').value.trim();
 
                 if (!title || !content) {
                     showStatus('Please enter both title and content', 'error');
@@ -630,7 +653,7 @@
                     // Update existing article
                     const { error } = await supabase
                         .from('kb_articles')
-                        .update({ title, content, updated_at: new Date().toISOString() })
+                        .update({ title, content, archive, updated_at: new Date().toISOString() })
                         .eq('id', currentArticleId);
 
                     if (error) {
@@ -641,13 +664,14 @@
                     const article = articles.find(a => a.id === currentArticleId);
                     article.title = title;
                     article.content = content;
+                    article.archive = archive;
                     
                     showStatus('Article updated!');
                 } else {
                     // Create new article
                     const { data, error } = await supabase
                         .from('kb_articles')
-                        .insert([{ title, content }])
+                        .insert([{ title, content, archive }])
                         .select()
                         .single();
 
