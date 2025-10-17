@@ -6,257 +6,48 @@
     <title>Noah's Toolbox</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: white;
-            color: #333;
-        }
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        .login-box h1 {
-            color: #2563eb;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .password-wrapper {
-            position: relative;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .password-wrapper input {
-            padding-right: 70px;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: #2563eb;
-        }
-        .show-password-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #2563eb;
-            cursor: pointer;
-            font-size: 12px;
-            padding: 5px 8px;
-        }
-        .show-password-btn:hover {
-            text-decoration: underline;
-        }
-        .remember-me {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .remember-me input {
-            width: auto;
-            margin-right: 8px;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .login-btn:hover {
-            background: #1d4ed8;
-        }
-        .error-message {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .app-container {
-            display: none;
-        }
-        .header {
-            background: white;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 {
-            color: #2563eb;
-            font-size: 24px;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .logout-btn, .admin-btn {
-            padding: 8px 16px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .logout-btn:hover, .admin-btn:hover {
-            background: #1d4ed8;
-        }
-        .main-content {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .controls input, .controls select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .controls button {
-            padding: 8px 16px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .controls button:hover {
-            background: #1d4ed8;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-        .delete-btn {
-            padding: 4px 8px;
-            background: #dc2626;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .delete-btn:hover {
-            background: #b91c1c;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-content h2 {
-            margin-bottom: 20px;
-            color: #2563eb;
-        }
-        .close-modal {
-            float: right;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-        .user-item {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .add-user-form {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-        .add-user-form input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .add-user-form button {
-            width: 100%;
-            padding: 10px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: white; color: #333; }
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .login-box h1 { color: #2563eb; margin-bottom: 30px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .password-wrapper { position: relative; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .password-wrapper input { padding-right: 70px; }
+        .form-group input:focus { outline: none; border-color: #2563eb; }
+        .show-password-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; padding: 5px 8px; }
+        .show-password-btn:hover { text-decoration: underline; }
+        .remember-me { display: flex; align-items: center; margin-bottom: 20px; }
+        .remember-me input { width: auto; margin-right: 8px; }
+        .login-btn { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 500; }
+        .login-btn:hover { background: #1d4ed8; }
+        .error-message { color: #dc2626; font-size: 14px; margin-top: 10px; text-align: center; }
+        .app-container { display: none; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { color: #2563eb; font-size: 24px; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .logout-btn, .admin-btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .logout-btn:hover, .admin-btn:hover { background: #1d4ed8; }
+        .main-content { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .controls input, .controls select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .controls button { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .controls button:hover { background: #1d4ed8; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .delete-btn { padding: 4px 8px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .delete-btn:hover { background: #b91c1c; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-content h2, .modal-content h3 { margin-bottom: 15px; color: #2563eb; }
+        .close-modal { float: right; font-size: 24px; cursor: pointer; color: #999; }
+        .user-item { padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .add-user-form { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+        .add-user-form input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .add-user-form button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -342,25 +133,20 @@
     </div>
 
     <script>
-        // REPLACE THESE WITH YOUR SUPABASE CREDENTIALS
-        const SUPABASE_URL = https://nggpymtnuuxfvgcuzemd.supabase.co;
-        const SUPABASE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI;
+        const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
         
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUser = null;
 
-        // Password hashing
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
         }
 
-        // Show/Hide password toggle
         document.getElementById('showPasswordBtn').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             if (passwordInput.type === 'password') {
@@ -372,13 +158,11 @@
             }
         });
 
-        // Login
         document.getElementById('loginBtn').addEventListener('click', async function() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
             const errorMessage = document.getElementById('errorMessage');
-
             errorMessage.textContent = '';
 
             if (!username || !password) {
@@ -386,31 +170,29 @@
                 return;
             }
 
-            console.log('Attempting login for:', username);
+            console.log('Attempting login for username:', username);
 
             try {
                 const passwordHash = await hashPassword(password);
-                console.log('Password hash:', passwordHash);
+                console.log('Generated password hash:', passwordHash);
                 
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('username', username);
+                const result = await supabaseClient.from('users').select('*').eq('username', username);
+                console.log('Supabase query result:', result);
 
-                console.log('Query response:', data, error);
-
-                if (error) {
-                    console.error('Supabase error:', error);
-                    errorMessage.textContent = 'Database error: ' + error.message;
+                if (result.error) {
+                    console.error('Supabase error:', result.error);
+                    errorMessage.textContent = 'Database error: ' + result.error.message;
                     return;
                 }
 
-                if (!data || data.length === 0) {
+                if (!result.data || result.data.length === 0) {
+                    console.log('No user found with username:', username);
                     errorMessage.textContent = 'Invalid username or password';
                     return;
                 }
 
-                const user = data[0];
+                const user = result.data[0];
+                console.log('Found user:', user.username, 'Expected hash:', user.password_hash, 'Provided hash:', passwordHash);
 
                 if (user.password_hash !== passwordHash) {
                     errorMessage.textContent = 'Wrong password';
@@ -418,11 +200,9 @@
                 }
 
                 currentUser = user;
-                
                 if (rememberMe) {
                     localStorage.setItem('rememberedUser', JSON.stringify(user));
                 }
-
                 showApp();
             } catch (err) {
                 console.error('Login error:', err);
@@ -430,14 +210,12 @@
             }
         });
 
-        // Enter key to login
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 document.getElementById('loginBtn').click();
             }
         });
 
-        // Check for remembered user
         window.addEventListener('load', function() {
             const remembered = localStorage.getItem('rememberedUser');
             if (remembered) {
@@ -450,15 +228,12 @@
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('currentUser').textContent = 'Welcome, ' + currentUser.username;
-            
             if (currentUser.is_admin) {
                 document.getElementById('adminBtn').style.display = 'block';
             }
-            
             loadWork();
         }
 
-        // Logout
         document.getElementById('logoutBtn').addEventListener('click', function() {
             currentUser = null;
             localStorage.removeItem('rememberedUser');
@@ -469,37 +244,22 @@
             document.getElementById('errorMessage').textContent = '';
         });
 
-        // Load work
         async function loadWork() {
-            const { data, error } = await supabaseClient
-                .from('work_data')
-                .select('*')
-                .eq('user_id', currentUser.username)
-                .order('date', { ascending: false });
-
-            if (error) {
-                console.error('Error loading work:', error);
+            const result = await supabaseClient.from('work_data').select('*').eq('user_id', currentUser.username).order('date', { ascending: false });
+            if (result.error) {
+                console.error('Error loading work:', result.error);
                 return;
             }
-
             const tbody = document.getElementById('workTable');
             tbody.innerHTML = '';
-
-            data.forEach(work => {
-                const row = tbody.insertRow();
-                row.innerHTML = '<td>' + work.date + '</td>' +
-                    '<td>' + work.project + '</td>' +
-                    '<td>' + work.task + '</td>' +
-                    '<td>' + work.location + '</td>' +
-                    '<td>' + work.start_time + '</td>' +
-                    '<td>' + work.end_time + '</td>' +
-                    '<td>' + work.duration + '</td>' +
-                    '<td>' + work.status + '</td>' +
-                    '<td><button class="delete-btn" onclick="deleteWork(' + work.id + ')">Delete</button></td>';
-            });
+            if (result.data) {
+                result.data.forEach(function(work) {
+                    const row = tbody.insertRow();
+                    row.innerHTML = '<td>' + work.date + '</td><td>' + work.project + '</td><td>' + work.task + '</td><td>' + work.location + '</td><td>' + work.start_time + '</td><td>' + work.end_time + '</td><td>' + work.duration + '</td><td>' + work.status + '</td><td><button class="delete-btn" onclick="deleteWork(' + work.id + ')">Delete</button></td>';
+                });
+            }
         }
 
-        // Add work
         document.getElementById('addWorkBtn').addEventListener('click', async function() {
             const project = document.getElementById('projectInput').value;
             const task = document.getElementById('taskInput').value;
@@ -514,24 +274,21 @@
             }
 
             const duration = calculateDuration(startTime, endTime);
+            const result = await supabaseClient.from('work_data').insert([{
+                user_id: currentUser.username,
+                project: project,
+                task: task,
+                location: location,
+                start_time: startTime,
+                end_time: endTime,
+                duration: duration,
+                status: status,
+                date: new Date().toISOString().split('T')[0]
+            }]);
 
-            const { error } = await supabaseClient
-                .from('work_data')
-                .insert([{
-                    user_id: currentUser.username,
-                    project: project,
-                    task: task,
-                    location: location,
-                    start_time: startTime,
-                    end_time: endTime,
-                    duration: duration,
-                    status: status,
-                    date: new Date().toISOString().split('T')[0]
-                }]);
-
-            if (error) {
-                console.error('Error adding work:', error);
-                alert('Error adding work: ' + error.message);
+            if (result.error) {
+                console.error('Error adding work:', result.error);
+                alert('Error adding work: ' + result.error.message);
                 return;
             }
 
@@ -540,24 +297,16 @@
             document.getElementById('locationInput').value = '';
             document.getElementById('startTime').value = '';
             document.getElementById('endTime').value = '';
-
             loadWork();
         });
 
-        // Delete work
         async function deleteWork(id) {
             if (!confirm('Delete this entry?')) return;
-
-            const { error } = await supabaseClient
-                .from('work_data')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                console.error('Error deleting work:', error);
+            const result = await supabaseClient.from('work_data').delete().eq('id', id);
+            if (result.error) {
+                console.error('Error deleting work:', result.error);
                 return;
             }
-
             loadWork();
         }
 
@@ -576,7 +325,6 @@
             return hours + 'h ' + mins + 'm';
         }
 
-        // Admin panel
         document.getElementById('adminBtn').addEventListener('click', function() {
             document.getElementById('adminModal').style.display = 'flex';
             loadUsers();
@@ -587,28 +335,24 @@
         });
 
         async function loadUsers() {
-            const { data, error } = await supabaseClient
-                .from('users')
-                .select('*')
-                .order('username');
-
-            if (error) {
-                console.error('Error loading users:', error);
+            const result = await supabaseClient.from('users').select('*').order('username');
+            if (result.error) {
+                console.error('Error loading users:', result.error);
                 return;
             }
-
             const usersList = document.getElementById('usersList');
             usersList.innerHTML = '';
-
-            data.forEach(user => {
-                const div = document.createElement('div');
-                div.className = 'user-item';
-                const isCurrentUser = user.username === currentUser.username;
-                div.innerHTML = '<span>' + user.username + (user.is_admin ? ' (Admin)' : '') + '</span>' +
-                    '<button class="delete-btn" onclick="deleteUser(\'' + user.username + '\')" ' + 
-                    (isCurrentUser ? 'disabled' : '') + '>Delete</button>';
-                usersList.appendChild(div);
-            });
+            if (result.data) {
+                result.data.forEach(function(user) {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    const isCurrentUser = user.username === currentUser.username;
+                    const adminText = user.is_admin ? ' (Admin)' : '';
+                    const disabledAttr = isCurrentUser ? 'disabled' : '';
+                    div.innerHTML = '<span>' + user.username + adminText + '</span><button class="delete-btn" onclick="deleteUser(\'' + user.username + '\')" ' + disabledAttr + '>Delete</button>';
+                    usersList.appendChild(div);
+                });
+            }
         }
 
         document.getElementById('addUserBtn').addEventListener('click', async function() {
@@ -622,40 +366,30 @@
             }
 
             const passwordHash = await hashPassword(password);
+            const result = await supabaseClient.from('users').insert([{
+                username: username,
+                password_hash: passwordHash,
+                is_admin: isAdmin
+            }]);
 
-            const { error } = await supabaseClient
-                .from('users')
-                .insert([{
-                    username: username,
-                    password_hash: passwordHash,
-                    is_admin: isAdmin
-                }]);
-
-            if (error) {
-                alert('Error adding user: ' + error.message);
+            if (result.error) {
+                alert('Error adding user: ' + result.error.message);
                 return;
             }
 
             document.getElementById('newUsername').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('newIsAdmin').checked = false;
-
             loadUsers();
         });
 
         async function deleteUser(username) {
             if (!confirm('Delete user ' + username + '?')) return;
-
-            const { error } = await supabaseClient
-                .from('users')
-                .delete()
-                .eq('username', username);
-
-            if (error) {
-                alert('Error deleting user: ' + error.message);
+            const result = await supabaseClient.from('users').delete().eq('username', username);
+            if (result.error) {
+                alert('Error deleting user: ' + result.error.message);
                 return;
             }
-
             loadUsers();
         }
     </script>
