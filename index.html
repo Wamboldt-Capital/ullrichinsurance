@@ -51,6 +51,14 @@
         .password-section { margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 6px; }
         .toolbox-link { padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 20px; }
         .toolbox-link:hover { background: #059669; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { color: #0a84ff; margin: 0; }
+        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
+        .close-modal:hover { color: #333; }
     </style>
 </head>
 <body>
@@ -86,48 +94,30 @@
             </div>
         </div>
         <div class="admin-content">
+            <!-- EXISTING USERS - NOW ON TOP -->
             <div class="admin-section">
-                <h2>Change Your Password</h2>
-                <div class="form-group">
-                    <label for="currentPassword">Current Password</label>
-                    <input type="password" id="currentPassword" placeholder="Enter current password">
-                </div>
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <input type="password" id="newPassword" placeholder="Enter new password">
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm New Password</label>
-                    <input type="password" id="confirmPassword" placeholder="Confirm new password">
-                </div>
-                <button class="add-user-btn" id="changePasswordBtn">Change Password</button>
-                <div class="error-message" id="passwordError"></div>
-                <div class="success-message" id="passwordSuccess"></div>
+                <h2>Existing Users</h2>
+                <div class="user-list" id="usersList"></div>
             </div>
 
+            <!-- ADD NEW USER - NOW ON BOTTOM -->
             <div class="admin-section">
-                <h2>User Management</h2>
-                <div class="password-section">
-                    <h3 style="margin-bottom: 15px;">Add New User</h3>
-                    <div class="form-group">
-                        <label for="newUsername">Username</label>
-                        <input type="text" id="newUsername" placeholder="Enter username">
-                    </div>
-                    <div class="form-group">
-                        <label for="newUserPassword">Password</label>
-                        <input type="password" id="newUserPassword" placeholder="Enter password">
-                    </div>
-                    <label style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <input type="checkbox" id="newIsAdmin" style="margin-right: 8px;">
-                        Make Admin
-                    </label>
-                    <button class="add-user-btn" id="addUserBtn">Add User</button>
-                    <div class="error-message" id="addUserError"></div>
-                    <div class="success-message" id="addUserSuccess"></div>
+                <h2>Add New User</h2>
+                <div class="form-group">
+                    <label for="newUsername">Username</label>
+                    <input type="text" id="newUsername" placeholder="Enter username">
                 </div>
-                
-                <h3 style="margin: 20px 0 10px 0;">Existing Users</h3>
-                <div class="user-list" id="usersList"></div>
+                <div class="form-group">
+                    <label for="newUserPassword">Password</label>
+                    <input type="password" id="newUserPassword" placeholder="Enter password">
+                </div>
+                <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <input type="checkbox" id="newIsAdmin" style="margin-right: 8px;">
+                    Make Admin
+                </label>
+                <button class="add-user-btn" id="addUserBtn">Add User</button>
+                <div class="error-message" id="addUserError"></div>
+                <div class="success-message" id="addUserSuccess"></div>
             </div>
 
             <div class="admin-section" style="text-align: center;">
@@ -137,12 +127,35 @@
         </div>
     </div>
 
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Password</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <p style="margin-bottom: 20px;">Changing password for: <strong id="modalUsername"></strong></p>
+            <div class="form-group">
+                <label for="modalNewPassword">New Password</label>
+                <input type="password" id="modalNewPassword" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label for="modalConfirmPassword">Confirm New Password</label>
+                <input type="password" id="modalConfirmPassword" placeholder="Confirm new password">
+            </div>
+            <button class="add-user-btn" id="modalChangePasswordBtn">Change Password</button>
+            <div class="error-message" id="modalPasswordError"></div>
+            <div class="success-message" id="modalPasswordSuccess"></div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUser = null;
+        let selectedUserForPasswordChange = null;
 
         async function hashPassword(password) {
             const encoder = new TextEncoder();
@@ -261,57 +274,6 @@
             window.location.href = loginUrl;
         }
 
-        document.getElementById('changePasswordBtn').addEventListener('click', async function() {
-            const current = document.getElementById('currentPassword').value;
-            const newPass = document.getElementById('newPassword').value;
-            const confirm = document.getElementById('confirmPassword').value;
-            const errorEl = document.getElementById('passwordError');
-            const successEl = document.getElementById('passwordSuccess');
-            
-            errorEl.textContent = '';
-            successEl.textContent = '';
-
-            if (!current || !newPass || !confirm) {
-                errorEl.textContent = 'Please fill all fields';
-                return;
-            }
-
-            if (newPass !== confirm) {
-                errorEl.textContent = 'New passwords do not match';
-                return;
-            }
-
-            if (newPass.length < 4) {
-                errorEl.textContent = 'Password must be at least 4 characters';
-                return;
-            }
-
-            try {
-                const currentHash = await hashPassword(current);
-                if (currentHash !== currentUser.password_hash) {
-                    errorEl.textContent = 'Current password is incorrect';
-                    return;
-                }
-
-                const newHash = await hashPassword(newPass);
-                const result = await supabaseClient.from('users').update({ password_hash: newHash }).eq('username', currentUser.username);
-
-                if (result.error) {
-                    errorEl.textContent = 'Error updating password: ' + result.error.message;
-                    return;
-                }
-
-                currentUser.password_hash = newHash;
-                localStorage.setItem('rememberedUser', JSON.stringify(currentUser));
-                successEl.textContent = 'Password changed successfully!';
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-            } catch (err) {
-                errorEl.textContent = 'Error: ' + err.message;
-            }
-        });
-
         async function loadUsers() {
             const result = await supabaseClient.from('users').select('*').order('username');
             if (result.error) {
@@ -326,19 +288,102 @@
                     div.className = 'user-item';
                     const isCurrentUser = user.username === currentUser.username;
                     const adminText = user.is_admin ? ' (Admin)' : '';
+                    
                     const span = document.createElement('span');
                     span.textContent = user.username + adminText;
-                    const btn = document.createElement('button');
-                    btn.className = 'delete-btn';
-                    btn.textContent = 'Delete';
-                    btn.disabled = isCurrentUser;
-                    btn.onclick = function() { deleteUser(user.username); };
+                    
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'user-actions';
+                    
+                    // Change Password button
+                    const changePasswordBtn = document.createElement('button');
+                    changePasswordBtn.className = 'change-password-btn';
+                    changePasswordBtn.textContent = 'Change Password';
+                    changePasswordBtn.onclick = function() { openChangePasswordModal(user.username); };
+                    
+                    // Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.disabled = isCurrentUser;
+                    deleteBtn.onclick = function() { deleteUser(user.username); };
+                    
+                    actionsDiv.appendChild(changePasswordBtn);
+                    actionsDiv.appendChild(deleteBtn);
+                    
                     div.appendChild(span);
-                    div.appendChild(btn);
+                    div.appendChild(actionsDiv);
                     usersList.appendChild(div);
                 });
             }
         }
+
+        // Modal Functions
+        function openChangePasswordModal(username) {
+            selectedUserForPasswordChange = username;
+            document.getElementById('modalUsername').textContent = username;
+            document.getElementById('modalNewPassword').value = '';
+            document.getElementById('modalConfirmPassword').value = '';
+            document.getElementById('modalPasswordError').textContent = '';
+            document.getElementById('modalPasswordSuccess').textContent = '';
+            document.getElementById('changePasswordModal').style.display = 'block';
+        }
+
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('changePasswordModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        document.getElementById('modalChangePasswordBtn').addEventListener('click', async function() {
+            const newPass = document.getElementById('modalNewPassword').value;
+            const confirm = document.getElementById('modalConfirmPassword').value;
+            const errorEl = document.getElementById('modalPasswordError');
+            const successEl = document.getElementById('modalPasswordSuccess');
+            
+            errorEl.textContent = '';
+            successEl.textContent = '';
+
+            if (!newPass || !confirm) {
+                errorEl.textContent = 'Please fill all fields';
+                return;
+            }
+
+            if (newPass !== confirm) {
+                errorEl.textContent = 'Passwords do not match';
+                return;
+            }
+
+            if (newPass.length < 4) {
+                errorEl.textContent = 'Password must be at least 4 characters';
+                return;
+            }
+
+            try {
+                const newHash = await hashPassword(newPass);
+                const result = await supabaseClient
+                    .from('users')
+                    .update({ password_hash: newHash })
+                    .eq('username', selectedUserForPasswordChange);
+
+                if (result.error) {
+                    errorEl.textContent = 'Error updating password: ' + result.error.message;
+                    return;
+                }
+
+                successEl.textContent = 'Password changed successfully!';
+                setTimeout(function() {
+                    document.getElementById('changePasswordModal').style.display = 'none';
+                }, 1500);
+            } catch (err) {
+                errorEl.textContent = 'Error: ' + err.message;
+            }
+        });
 
         document.getElementById('addUserBtn').addEventListener('click', async function() {
             const username = document.getElementById('newUsername').value.trim();
