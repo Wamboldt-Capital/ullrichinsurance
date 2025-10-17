@@ -52,7 +52,6 @@
         .toolbox-link { padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 20px; }
         .toolbox-link:hover { background: #059669; }
 
-        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -94,13 +93,11 @@
             </div>
         </div>
         <div class="admin-content">
-            <!-- EXISTING USERS - NOW ON TOP -->
             <div class="admin-section">
                 <h2>Existing Users</h2>
                 <div class="user-list" id="usersList"></div>
             </div>
 
-            <!-- ADD NEW USER - NOW ON BOTTOM -->
             <div class="admin-section">
                 <h2>Add New User</h2>
                 <div class="form-group">
@@ -131,7 +128,6 @@
         </div>
     </div>
 
-    <!-- CHANGE PASSWORD MODAL -->
     <div id="changePasswordModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -167,6 +163,10 @@
         let currentUser = null;
         let selectedUserForPasswordChange = null;
 
+        // Session token length
+        const SESSION_TOKEN_LENGTH = 64;
+        const SESSION_DURATION_DAYS = 30;
+
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -175,13 +175,83 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        function generateSessionToken() {
+            const array = new Uint8Array(SESSION_TOKEN_LENGTH);
+            crypto.getRandomValues(array);
+            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function createSession(username, rememberMe) {
+            const sessionToken = generateSessionToken();
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + (rememberMe ? SESSION_DURATION_DAYS : 1));
+
+            // Store session in Supabase
+            const result = await supabaseClient.from('sessions').insert([{
+                session_token: sessionToken,
+                username: username,
+                expires_at: expiresAt.toISOString(),
+                created_at: new Date().toISOString()
+            }]);
+
+            if (result.error) {
+                console.error('Error creating session:', result.error);
+                return null;
+            }
+
+            // Store session token in browser
+            if (rememberMe) {
+                localStorage.setItem('sessionToken', sessionToken);
+            } else {
+                sessionStorage.setItem('sessionToken', sessionToken);
+            }
+
+            return sessionToken;
+        }
+
+        async function validateSession(sessionToken) {
+            if (!sessionToken) return null;
+
+            const result = await supabaseClient
+                .from('sessions')
+                .select('*, users(*)')
+                .eq('session_token', sessionToken)
+                .gt('expires_at', new Date().toISOString())
+                .single();
+
+            if (result.error || !result.data) {
+                return null;
+            }
+
+            return result.data.users;
+        }
+
+        async function deleteSession(sessionToken) {
+            if (!sessionToken) return;
+
+            await supabaseClient
+                .from('sessions')
+                .delete()
+                .eq('session_token', sessionToken);
+
+            localStorage.removeItem('sessionToken');
+            sessionStorage.removeItem('sessionToken');
+        }
+
+        async function cleanupExpiredSessions() {
+            await supabaseClient
+                .from('sessions')
+                .delete()
+                .lt('expires_at', new Date().toISOString());
+        }
+
         function getBaseUrl() {
             const path = window.location.pathname;
             const directory = path.substring(0, path.lastIndexOf('/') + 1);
             return window.location.origin + directory;
         }
 
-        // Show/Hide Password for Login
+        // Show/Hide Password toggles
         document.getElementById('showPasswordBtn').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             if (passwordInput.type === 'password') {
@@ -193,7 +263,6 @@
             }
         });
 
-        // Show/Hide Password for Modal New Password
         document.getElementById('showModalPassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('modalNewPassword');
             if (passwordInput.type === 'password') {
@@ -205,7 +274,6 @@
             }
         });
 
-        // Show/Hide Password for Modal Confirm Password
         document.getElementById('showModalConfirm').addEventListener('click', function() {
             const passwordInput = document.getElementById('modalConfirmPassword');
             if (passwordInput.type === 'password') {
@@ -250,10 +318,14 @@
                     return;
                 }
 
-                currentUser = user;
-                if (rememberMe) {
-                    localStorage.setItem('rememberedUser', JSON.stringify(user));
+                // Create session
+                const sessionToken = await createSession(username, rememberMe);
+                if (!sessionToken) {
+                    errorMessage.textContent = 'Failed to create session';
+                    return;
                 }
+
+                currentUser = user;
                 
                 if (user.is_admin) {
                     showAdminPanel();
@@ -271,14 +343,25 @@
             }
         });
 
-        window.addEventListener('load', function() {
-            const remembered = localStorage.getItem('rememberedUser');
-            if (remembered) {
-                currentUser = JSON.parse(remembered);
-                if (currentUser.is_admin) {
-                    showAdminPanel();
+        window.addEventListener('load', async function() {
+            // Clean up expired sessions periodically
+            await cleanupExpiredSessions();
+
+            // Check for existing session
+            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+            if (sessionToken) {
+                const user = await validateSession(sessionToken);
+                if (user) {
+                    currentUser = user;
+                    if (currentUser.is_admin) {
+                        showAdminPanel();
+                    } else {
+                        redirectToToolbox();
+                    }
                 } else {
-                    redirectToToolbox();
+                    // Invalid or expired session
+                    localStorage.removeItem('sessionToken');
+                    sessionStorage.removeItem('sessionToken');
                 }
             }
         });
@@ -292,7 +375,8 @@
         }
 
         function redirectToToolbox() {
-            const toolboxUrl = getBaseUrl() + 'toolbox.html?user=' + encodeURIComponent(currentUser.username);
+            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+            const toolboxUrl = getBaseUrl() + 'toolbox.html?session=' + encodeURIComponent(sessionToken);
             window.location.href = toolboxUrl;
         }
 
@@ -302,9 +386,11 @@
 
         document.getElementById('adminLogoutBtn').addEventListener('click', logout);
 
-        function logout() {
+        async function logout() {
+            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+            await deleteSession(sessionToken);
+            
             currentUser = null;
-            localStorage.removeItem('rememberedUser');
             
             const loginUrl = getBaseUrl() + 'index.html';
             window.location.href = loginUrl;
@@ -332,13 +418,11 @@
                     const actionsDiv = document.createElement('div');
                     actionsDiv.className = 'user-actions';
                     
-                    // Change Password button
                     const changePasswordBtn = document.createElement('button');
                     changePasswordBtn.className = 'change-password-btn';
                     changePasswordBtn.textContent = 'Change Password';
                     changePasswordBtn.onclick = function() { openChangePasswordModal(user.username, displayName); };
                     
-                    // Delete button
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-btn';
                     deleteBtn.textContent = 'Delete';
@@ -355,7 +439,6 @@
             }
         }
 
-        // Modal Functions
         function openChangePasswordModal(username, displayName) {
             selectedUserForPasswordChange = username;
             document.getElementById('modalUsername').textContent = displayName || username;
@@ -364,7 +447,6 @@
             document.getElementById('modalPasswordError').textContent = '';
             document.getElementById('modalPasswordSuccess').textContent = '';
             
-            // Reset password visibility
             document.getElementById('modalNewPassword').type = 'password';
             document.getElementById('modalConfirmPassword').type = 'password';
             document.getElementById('showModalPassword').textContent = '👁️ Show';
@@ -420,6 +502,12 @@
                     return;
                 }
 
+                // Invalidate all sessions for this user
+                await supabaseClient
+                    .from('sessions')
+                    .delete()
+                    .eq('username', selectedUserForPasswordChange);
+
                 successEl.textContent = 'Password changed successfully!';
                 setTimeout(function() {
                     document.getElementById('changePasswordModal').style.display = 'none';
@@ -472,6 +560,11 @@
 
         async function deleteUser(username) {
             if (!confirm('Delete user ' + username + '?')) return;
+            
+            // Delete all sessions for this user
+            await supabaseClient.from('sessions').delete().eq('username', username);
+            
+            // Delete the user
             const result = await supabaseClient.from('users').delete().eq('username', username);
             if (result.error) {
                 alert('Error deleting user: ' + result.error.message);
