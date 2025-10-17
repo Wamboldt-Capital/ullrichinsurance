@@ -464,33 +464,42 @@
       runningSecs = Math.round((Date.now() - active.start)/1000);
     }
     
-    // Header row with work sections and list titles
-    const headers = ['Section','Seconds','HH:MM:SS'];
+    // Header row: Section, HH:MM:SS, empty column, then list titles
+    const headers = ['Section', 'HH:MM:SS', ''];
     listTitles.forEach(title => headers.push(title));
     const rows = [headers];
-    
-    // Work section data
-    for (let i=0;i<NUM;i++){
-      const secs = totals[i] + (active && active.index===i ? runningSecs : 0);
-      const hh = Math.floor(secs/3600).toString().padStart(2,'0');
-      const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
-      const ss = (secs%60).toString().padStart(2,'0');
-      const row = [names[i].replace(/,/g,' '), String(secs), `${hh}:${mm}:${ss}`];
-      // Empty cells for list columns
-      listTitles.forEach(() => row.push(''));
-      rows.push(row);
-    }
     
     // Find max items in any list
     const maxItems = Math.max(...listData.map(l => l.items.length), 0);
     
-    // List items rows
-    for (let itemIdx = 0; itemIdx < maxItems; itemIdx++) {
-      const row = ['', '', '']; // Empty cells for work section columns
+    // Combined rows: work sections + list items side by side
+    const maxRows = Math.max(NUM, maxItems);
+    
+    for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
+      const row = [];
+      
+      // Work section data (first 9 rows)
+      if (rowIdx < NUM) {
+        const secs = totals[rowIdx] + (active && active.index===rowIdx ? runningSecs : 0);
+        const hh = Math.floor(secs/3600).toString().padStart(2,'0');
+        const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
+        const ss = (secs%60).toString().padStart(2,'0');
+        row.push(names[rowIdx].replace(/,/g,' '));
+        row.push(`${hh}:${mm}:${ss}`);
+      } else {
+        row.push('');
+        row.push('');
+      }
+      
+      // Empty column
+      row.push('');
+      
+      // List items
       for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
-        const item = listData[listIdx].items[itemIdx];
+        const item = listData[listIdx].items[rowIdx];
         row.push(item || '');
       }
+      
       rows.push(row);
     }
     
