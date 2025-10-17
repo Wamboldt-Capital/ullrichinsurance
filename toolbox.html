@@ -242,10 +242,7 @@
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     if (confirm('Are you sure you want to logout?')) {
       await deleteSession(sessionToken);
-      const path = window.location.pathname;
-      const directory = path.substring(0, path.lastIndexOf('/') + 1);
-      const loginUrl = window.location.origin + directory + 'index.html';
-      window.location.href = loginUrl;
+      window.location.href = 'https://ireallylovetexas.github.io/ullrichinsurance/';
     }
   });
 
