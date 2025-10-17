@@ -503,6 +503,28 @@
       rows.push(row);
     }
     
+    // Add TOTAL row
+    const totalRow = ['', '', ''];
+    for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
+      const hasTotals = listIdx === 3 || listIdx === 5; // New Business Premium (index 3) and Requote Premium (index 5)
+      
+      if (hasTotals) {
+        // Sum dollar amounts
+        let sum = 0;
+        listData[listIdx].items.forEach(item => {
+          const numValue = parseFloat(item.replace(/[^0-9.-]/g, ''));
+          if (!isNaN(numValue)) {
+            sum += numValue;
+          }
+        });
+        totalRow.push(sum.toFixed(2));
+      } else {
+        // Count items
+        totalRow.push(listData[listIdx].items.length);
+      }
+    }
+    rows.push(totalRow);
+    
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
