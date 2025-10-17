@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Noah's Toolbox</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family: system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;max-width:900px;margin:24px auto;padding:16px;color:#0b1220}
+    h1{font-size:1.4rem;margin:0 0 20px}
+    .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:12px 16px;background:#f9fafb;border-radius:8px;border:1px solid #e6e9ee}
+    .user-display{font-weight:600;color:#0a84ff}
+    .logout-btn{padding:8px 16px;background:#ff3b30;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600}
+    .logout-btn:hover{background:#d32f2f}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+    .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
+    .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
+    .name{font-weight:600;flex:1;white-space:pre-line}
+    .name[contenteditable]{padding:2px 6px;border-radius:6px}
+    .btn{padding:12px 20px;border-radius:8px;border:0;cursor:pointer;font-size:1rem;font-weight:600;margin-top:8px}
+    .btn.start,.btn.stop{width:100%;align-self:flex-end}
+    .start{background:#0a84ff;color:white}
+    .stop{background:#ff3b30;color:white}
+    .meta{font-size:0.9rem;color:#334155;display:flex;flex-direction:column;align-items:flex-start;font-variant-numeric:tabular-nums}
+    .big{font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+    .small{font-size:0.85rem;padding:6px 8px}
+    .wide{grid-column:1/-1}
+    input[type=number]{width:70px;padding:6px}
+    .secondary{background:#f3f4f6;border:1px solid #e6e9ee}
+    .list-title-wrapper{display:flex;align-items:center;gap:12px;border-bottom:2px solid #e6e9ee;margin-bottom:16px}
+    .list-title{font-size:1.2rem;font-weight:600;border:none;padding:8px 4px;flex:1}
+    .list-title:focus{outline:none}
+    .list-title-wrapper:focus-within{border-bottom-color:#0a84ff}
+    .list-total-header{font-weight:700;font-size:1.1rem;color:#0a84ff;padding:8px 12px;background:white;border-radius:6px;white-space:nowrap}
+    .todo-input{flex:1;padding:8px 12px;border:1px solid #e6e9ee;border-radius:6px;font-size:0.95rem}
+    .todo-input:focus{outline:none;border-color:#0a84ff}
+    .todo-list{display:flex;flex-direction:column;gap:8px}
+    .todo-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9fafb;border-radius:6px}
+    .todo-text{flex:1;font-size:0.95rem}
+    .delete-btn{background:#ff3b30;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.85rem}
+    .status{position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:10px 20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:1000;display:none}
+    .status.show{display:block}
+    .status.error{background:#ef4444}
+    .error-screen{display:none;text-align:center;padding:40px;max-width:500px;margin:100px auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+    .error-screen h2{color:#ff3b30;margin-bottom:20px}
+    .error-screen p{color:#666;margin-bottom:30px;line-height:1.6}
+    .error-screen a{display:inline-block;padding:12px 24px;background:#0a84ff;color:white;text-decoration:none;border-radius:6px;font-weight:600}
+    .error-screen a:hover{background:#0077ed}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="error-screen" id="errorScreen">
+    <h2>⚠️ No User Specified</h2>
+    <p>This toolbox requires a valid user parameter in the URL.</p>
+    <p>Please log in through the main login page to access your toolbox.</p>
+    <a href="login.html">Go to Login Page</a>
+  </div>
+
+  <div id="mainContent" style="display:none">
+    <div class="status" id="status"></div>
+    
+    <div class="top-bar">
+      <div>
+        <h1 style="margin:0;font-size:1.4rem">Noah's Toolbox</h1>
+        <div class="user-display">User: <span id="currentUsername"></span></div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div id="sections" class="grid"></div>
+
+    <div class="lists-grid">
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="0" placeholder="List Title" />
+          <span class="list-total-header" data-list="0"></span>
+        </div>
+        <div class="todo-list" data-list="0"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="0" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="0">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="1" placeholder="List Title" />
+          <span class="list-total-header" data-list="1"></span>
+        </div>
+        <div class="todo-list" data-list="1"></div>
+        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="1" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="1">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="2" placeholder="List Title" />
+          <span class="list-total-header" data-list="2"></span>
+        </div>
+        <div class="todo-list" data-list="2"></div>
+        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="2" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="2">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="3" placeholder="List Title" />
+          <span class="list-total-header" data-list="3"></span>
+        </div>
+        <div class="todo-list" data-list="3"></div>
+        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="3" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="3">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="4" placeholder="List Title" />
+          <span class="list-total-header" data-list="4"></span>
+        </div>
+        <div class="todo-list" data-list="4"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="4" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="4">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="5" placeholder="List Title" />
+          <span class="list-total-header" data-list="5"></span>
+        </div>
+        <div class="todo-list" data-list="5"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="5" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="5">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card wide">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="exportBtn" class="btn small" style="flex:1;max-width:150px">Export CSV</button>
+        <button id="resetBtn" class="btn small secondary" style="flex:1;max-width:150px">Reset Today</button>
+        <div style="margin-left:auto">Date: <span id="dateLabel"></span></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Get username from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const USER_ID = urlParams.get('user');
+
+  // Show error if no user specified
+  if (!USER_ID) {
+    document.getElementById('errorScreen').style.display = 'block';
+    return;
+  }
+
+  // Show main content and set username
+  document.getElementById('mainContent').style.display = 'block';
+  document.getElementById('currentUsername').textContent = USER_ID;
+
+  // Logout button handler
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('Are you sure you want to logout?')) {
+      window.location.href = 'login.html';
+    }
+  });
+
+  // ✅ SUPABASE CREDENTIALS
+  const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
+
+  let supabase;
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (error) {
+    console.error('Supabase initialization error:', error);
+  }
+
+  const NUM = 9;
+  const NUM_LISTS = 6;
+  const sectionsEl = document.getElementById('sections');
+  const exportBtn = document.getElementById('exportBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const dateLabel = document.getElementById('dateLabel');
+
+  const todayKey = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const formatDate = (d) => {
+    const date = new Date(d);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}-${day}-${year}`;
+  };
+  
+  dateLabel.textContent = formatDate(new Date());
+
+  const formatSecs = s => {
+    s = Math.max(0, Math.round(s));
+    const hours = Math.floor(s/3600);
+    const mins = Math.floor((s%3600)/60);
+    const secs = s%60;
+    if (hours>0) return `${hours}h ${String(mins).padStart(2,'0')}m`;
+    return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  };
+
+  const defaultNames = [
+    'Automations',
+    'Email/Text',
+    'Fixing Post-Bound Policy Issues',
+    'Follow Up',
+    'In-Bound Calls',
+    'Interviews',
+    'Loom Presentations',
+    'Requotes',
+    'New Business'
+  ];
+
+  const defaultListTitles = [
+    'Interviews Done',
+    'Loom Presentations',
+    'New Business Submission',
+    'New Business Premium',
+    'Requote Submission',
+    'Requote Premium'
+  ];
+
+  let names = [...defaultNames];
+  let totals = Array.from({length:NUM}, ()=>0);
+  let active = null;
+  let listTitles = [...defaultListTitles];
+  let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
+
+  function showStatus(message, type = 'saved') {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = message;
+    statusEl.className = `status show ${type === 'error' ? 'error' : ''}`;
+    setTimeout(() => {
+      statusEl.className = 'status';
+    }, 3000);
+  }
+
+  async function saveData() {
+    if (!supabase) return;
+    try {
+      const today = todayKey();
+      const { error } = await supabase
+        .from('work_data')
+        .upsert([{
+          user_id: USER_ID,
+          date: today,
+          names: JSON.stringify(names),
+          totals: JSON.stringify(totals),
+          active: JSON.stringify(active),
+          list_titles: JSON.stringify(listTitles),
+          list_items: JSON.stringify(listData.map(l => l.items))
+        }], {
+          onConflict: 'user_id,date'
+        });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        showStatus('Error saving', 'error');
+      } else {
+        showStatus('Saved ✓', 'saved');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+  }
+
+  async function loadData() {
+    if (!supabase) return;
+    try {
+      const today = todayKey();
+      const { data, error } = await supabase
+        .from('work_data')
+        .select('*')
+        .eq('user_id', USER_ID)
+        .eq('date', today)
+        .single();
+
+      if (error) {
+        if (error.code !== 'PGRST116') {
+          console.error('Error loading data:', error);
+        }
+        return;
+      }
+
+      if (data) {
+        names = JSON.parse(data.names || JSON.stringify(defaultNames));
+        totals = JSON.parse(data.totals || JSON.stringify(Array(NUM).fill(0)));
+        const loadedActive = JSON.parse(data.active || 'null');
+        
+        if (loadedActive && loadedActive.index !== -1 && loadedActive.start) {
+          const elapsed = Math.round((Date.now() - loadedActive.start) / 1000);
+          totals[loadedActive.index] = (totals[loadedActive.index] || 0) + elapsed;
+          active = null;
+          await saveData();
+        } else {
+          active = loadedActive;
+        }
+        
+        listTitles = JSON.parse(data.list_titles || JSON.stringify(defaultListTitles));
+        const items = JSON.parse(data.list_items || '[]');
+        listData = items.map((itemList, i) => ({ items: itemList || [] }));
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+
+  const elems = [];
+  function makeSection(i) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.contentEditable = true;
+    name.spellcheck = false;
+    name.textContent = names[i];
+    name.addEventListener('blur', () => {
+      names[i] = name.textContent.trim() || `Section ${i+1}`;
+      saveData();
+    });
+    name.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
+    });
+
+    const rightSide = document.createElement('div');
+    rightSide.className = 'meta';
+    
+    const total = document.createElement('div');
+    total.textContent = `Today: ${formatSecs(totals[i])}`;
+    
+    const running = document.createElement('div');
+    running.className = 'running';
+    running.textContent = `Current: 00:00`;
+    
+    rightSide.appendChild(total);
+    rightSide.appendChild(running);
+    
+    header.appendChild(name);
+    header.appendChild(rightSide);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn start';
+    btn.textContent = 'Start';
+    
+    card.appendChild(header);
+    card.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      if (active && active.index === i) {
+        stopActive();
+      } else {
+        startSection(i);
+      }
+    });
+
+    return {card, btn, running, total, name};
+  }
+
+  for (let i=0;i<NUM;i++){
+    const obj = makeSection(i);
+    elems.push(obj);
+    sectionsEl.appendChild(obj.card);
+  }
+
+  function refreshAll() {
+    for (let i=0;i<NUM;i++){
+      elems[i].name.textContent = names[i];
+      elems[i].total.textContent = `Today: ${formatSecs(totals[i])}`;
+      if (active && active.index === i) {
+        elems[i].btn.classList.remove('start'); elems[i].btn.classList.add('stop');
+        elems[i].btn.textContent = 'Stop';
+      } else {
+        elems[i].btn.classList.remove('stop'); elems[i].btn.classList.add('start');
+        elems[i].btn.textContent = 'Start';
+        elems[i].running.textContent = 'Current: 00:00';
+      }
+    }
+  }
+
+  function startSection(i) {
+    const now = Date.now();
+    if (active && active.index !== i) {
+      const delta = Math.round((now - active.start)/1000);
+      totals[active.index] = (totals[active.index]||0) + delta;
+    }
+    active = {index:i, start: now};
+    saveData();
+    refreshAll();
+  }
+
+  function stopActive() {
+    if (!active) return;
+    const now = Date.now();
+    const delta = Math.round((now - active.start)/1000);
+    totals[active.index] = (totals[active.index]||0) + delta;
+    active = null;
+    saveData();
+    refreshAll();
+  }
+
+  setInterval(()=> {
+    if (active) {
+      const now = Date.now();
+      const sec = Math.round((now - active.start)/1000);
+      elems[active.index].running.textContent = `Current: ${formatSecs(sec)}`;
+      elems[active.index].total.textContent = `Today: ${formatSecs(totals[active.index] + sec)}`;
+    }
+  }, 500);
+
+  const renderListItems = (index) => {
+    const todoListEl = document.querySelector(`.todo-list[data-list="${index}"]`);
+    const totalEl = document.querySelector(`.list-total-header[data-list="${index}"]`);
+    const hasTotals = index === 3 || index === 5;
+    
+    todoListEl.innerHTML = '';
+    let total = 0;
+    
+    listData[index].items.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'todo-item';
+      
+      const text = document.createElement('div');
+      text.className = 'todo-text';
+      text.textContent = item;
+      
+      if (hasTotals) {
+        const numValue = parseFloat(item.replace(/[^0-9.-]/g, ''));
+        if (!isNaN(numValue)) {
+          total += numValue;
+        }
+      }
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => {
+        listData[index].items.splice(idx, 1);
+        saveData();
+        renderListItems(index);
+      });
+      
+      div.appendChild(text);
+      div.appendChild(deleteBtn);
+      todoListEl.appendChild(div);
+    });
+    
+    if (hasTotals && listData[index].items.length > 0) {
+      totalEl.textContent = `${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    } else if (listData[index].items.length > 0) {
+      totalEl.textContent = `${listData[index].items.length}`;
+    } else {
+      totalEl.textContent = '';
+    }
+  };
+
+  for (let i = 0; i < NUM_LISTS; i++) {
+    const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+    const itemInput = document.querySelector(`.todo-input[data-list="${i}"]`);
+    const addBtn = document.querySelector(`.add-item-btn[data-list="${i}"]`);
+
+    titleInput.value = listTitles[i];
+
+    titleInput.addEventListener('input', () => {
+      listTitles[i] = titleInput.value;
+      saveData();
+    });
+
+    const addItem = () => {
+      const text = itemInput.value.trim();
+      if (!text) return;
+      listData[i].items.push(text);
+      itemInput.value = '';
+      saveData();
+      renderListItems(i);
+    };
+
+    addBtn.addEventListener('click', addItem);
+    itemInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addItem();
+    });
+
+    renderListItems(i);
+  }
+
+  exportBtn.addEventListener('click', () => {
+    let runningSecs = 0;
+    if (active) {
+      runningSecs = Math.round((Date.now() - active.start)/1000);
+    }
+    
+    const headers = ['Section', 'HH:MM:SS', ''];
+    listTitles.forEach(title => headers.push(title));
+    const rows = [headers];
+    
+    const maxItems = Math.max(...listData.map(l => l.items.length), 0);
+    const maxRows = Math.max(NUM, maxItems);
+    
+    for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
+      const row = [];
+      
+      if (rowIdx < NUM) {
+        const secs = totals[rowIdx] + (active && active.index===rowIdx ? runningSecs : 0);
+        const hh = Math.floor(secs/3600).toString().padStart(2,'0');
+        const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
+        const ss = (secs%60).toString().padStart(2,'0');
+        row.push(names[rowIdx].replace(/,/g,' '));
+        row.push(`${hh}:${mm}:${ss}`);
+      } else {
+        row.push('');
+        row.push('');
+      }
+      
+      row.push('');
+      
+      for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
+        const item = listData[listIdx].items[rowIdx];
+        row.push(item || '');
+      }
+      
+      rows.push(row);
+    }
+    
+    const totalRow = ['', '', ''];
+    for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
+      const hasTotals = listIdx === 3 || listIdx === 5;
+      
+      if (hasTotals) {
+        let sum = 0;
+        listData[listIdx].items.forEach(item => {
+          const numValue = parseFloat(item.replace(/[^0-9.-]/g, ''));
+          if (!isNaN(numValue)) {
+            sum += numValue;
+          }
+        });
+        totalRow.push(sum.toFixed(2));
+      } else {
+        totalRow.push(listData[listIdx].items.length);
+      }
+    }
+    rows.push(totalRow);
+    
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${USER_ID}-work-totals-${todayKey()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (!confirm('Clear today\'s time totals and to-do items? Section names and list titles will be kept.')) return;
+    totals = Array.from({length:NUM}, ()=>0);
+    active = null;
+    for (let i = 0; i < NUM_LISTS; i++) {
+      listData[i].items = [];
+      renderListItems(i);
+    }
+    saveData();
+    refreshAll();
+  });
+
+  (async () => {
+    await loadData();
+    refreshAll();
+    for (let i = 0; i < NUM_LISTS; i++) {
+      const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+      titleInput.value = listTitles[i];
+      renderListItems(i);
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
