@@ -104,8 +104,12 @@
             <div class="admin-section">
                 <h2>Add New User</h2>
                 <div class="form-group">
+                    <label for="newDisplayName">Employee Name</label>
+                    <input type="text" id="newDisplayName" placeholder="Enter full name (e.g., Noah Smith)">
+                </div>
+                <div class="form-group">
                     <label for="newUsername">Username</label>
-                    <input type="text" id="newUsername" placeholder="Enter username">
+                    <input type="text" id="newUsername" placeholder="Enter username (e.g., noah)">
                 </div>
                 <div class="form-group">
                     <label for="newUserPassword">Password</label>
@@ -137,11 +141,17 @@
             <p style="margin-bottom: 20px;">Changing password for: <strong id="modalUsername"></strong></p>
             <div class="form-group">
                 <label for="modalNewPassword">New Password</label>
-                <input type="password" id="modalNewPassword" placeholder="Enter new password">
+                <div class="password-wrapper">
+                    <input type="password" id="modalNewPassword" placeholder="Enter new password">
+                    <button type="button" class="show-password-btn" id="showModalPassword">👁️ Show</button>
+                </div>
             </div>
             <div class="form-group">
                 <label for="modalConfirmPassword">Confirm New Password</label>
-                <input type="password" id="modalConfirmPassword" placeholder="Confirm new password">
+                <div class="password-wrapper">
+                    <input type="password" id="modalConfirmPassword" placeholder="Confirm new password">
+                    <button type="button" class="show-password-btn" id="showModalConfirm">👁️ Show</button>
+                </div>
             </div>
             <button class="add-user-btn" id="modalChangePasswordBtn">Change Password</button>
             <div class="error-message" id="modalPasswordError"></div>
@@ -171,8 +181,33 @@
             return window.location.origin + directory;
         }
 
+        // Show/Hide Password for Login
         document.getElementById('showPasswordBtn').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.textContent = '🙈 Hide';
+            } else {
+                passwordInput.type = 'password';
+                this.textContent = '👁️ Show';
+            }
+        });
+
+        // Show/Hide Password for Modal New Password
+        document.getElementById('showModalPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('modalNewPassword');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.textContent = '🙈 Hide';
+            } else {
+                passwordInput.type = 'password';
+                this.textContent = '👁️ Show';
+            }
+        });
+
+        // Show/Hide Password for Modal Confirm Password
+        document.getElementById('showModalConfirm').addEventListener('click', function() {
+            const passwordInput = document.getElementById('modalConfirmPassword');
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 this.textContent = '🙈 Hide';
@@ -251,7 +286,8 @@
         function showAdminPanel() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('adminContainer').style.display = 'block';
-            document.getElementById('adminUsername').textContent = 'Admin: ' + currentUser.username;
+            const displayName = currentUser.display_name || currentUser.username;
+            document.getElementById('adminUsername').textContent = 'Admin: ' + displayName;
             loadUsers();
         }
 
@@ -288,9 +324,10 @@
                     div.className = 'user-item';
                     const isCurrentUser = user.username === currentUser.username;
                     const adminText = user.is_admin ? ' (Admin)' : '';
+                    const displayName = user.display_name || user.username;
                     
                     const span = document.createElement('span');
-                    span.textContent = user.username + adminText;
+                    span.textContent = displayName + ' (' + user.username + ')' + adminText;
                     
                     const actionsDiv = document.createElement('div');
                     actionsDiv.className = 'user-actions';
@@ -299,7 +336,7 @@
                     const changePasswordBtn = document.createElement('button');
                     changePasswordBtn.className = 'change-password-btn';
                     changePasswordBtn.textContent = 'Change Password';
-                    changePasswordBtn.onclick = function() { openChangePasswordModal(user.username); };
+                    changePasswordBtn.onclick = function() { openChangePasswordModal(user.username, displayName); };
                     
                     // Delete button
                     const deleteBtn = document.createElement('button');
@@ -319,13 +356,20 @@
         }
 
         // Modal Functions
-        function openChangePasswordModal(username) {
+        function openChangePasswordModal(username, displayName) {
             selectedUserForPasswordChange = username;
-            document.getElementById('modalUsername').textContent = username;
+            document.getElementById('modalUsername').textContent = displayName || username;
             document.getElementById('modalNewPassword').value = '';
             document.getElementById('modalConfirmPassword').value = '';
             document.getElementById('modalPasswordError').textContent = '';
             document.getElementById('modalPasswordSuccess').textContent = '';
+            
+            // Reset password visibility
+            document.getElementById('modalNewPassword').type = 'password';
+            document.getElementById('modalConfirmPassword').type = 'password';
+            document.getElementById('showModalPassword').textContent = '👁️ Show';
+            document.getElementById('showModalConfirm').textContent = '👁️ Show';
+            
             document.getElementById('changePasswordModal').style.display = 'block';
         }
 
@@ -386,6 +430,7 @@
         });
 
         document.getElementById('addUserBtn').addEventListener('click', async function() {
+            const displayName = document.getElementById('newDisplayName').value.trim();
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newUserPassword').value;
             const isAdmin = document.getElementById('newIsAdmin').checked;
@@ -395,8 +440,8 @@
             errorEl.textContent = '';
             successEl.textContent = '';
 
-            if (!username || !password) {
-                errorEl.textContent = 'Please enter username and password';
+            if (!displayName || !username || !password) {
+                errorEl.textContent = 'Please fill in all fields';
                 return;
             }
 
@@ -405,7 +450,8 @@
                 const result = await supabaseClient.from('users').insert([{
                     username: username,
                     password_hash: passwordHash,
-                    is_admin: isAdmin
+                    is_admin: isAdmin,
+                    display_name: displayName
                 }]);
 
                 if (result.error) {
@@ -414,6 +460,7 @@
                 }
 
                 successEl.textContent = 'User added successfully!';
+                document.getElementById('newDisplayName').value = '';
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newUserPassword').value = '';
                 document.getElementById('newIsAdmin').checked = false;
