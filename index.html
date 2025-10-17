@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noah's Toolbox</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.3/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -54,6 +54,9 @@
             border-radius: 4px;
             font-size: 14px;
         }
+        .password-wrapper input {
+            padding-right: 70px;
+        }
         .form-group input:focus {
             outline: none;
             border-color: #2563eb;
@@ -68,7 +71,10 @@
             color: #2563eb;
             cursor: pointer;
             font-size: 12px;
-            padding: 5px;
+            padding: 5px 8px;
+        }
+        .show-password-btn:hover {
+            text-decoration: underline;
         }
         .remember-me {
             display: flex;
@@ -207,6 +213,8 @@
             border-radius: 8px;
             width: 90%;
             max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .modal-content h2 {
             margin-bottom: 20px;
@@ -227,6 +235,28 @@
             justify-content: space-between;
             align-items: center;
         }
+        .add-user-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .add-user-form input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .add-user-form button {
+            width: 100%;
+            padding: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -241,14 +271,14 @@
                 <label for="password">Password</label>
                 <div class="password-wrapper">
                     <input type="password" id="password" placeholder="Enter password">
-                    <button class="show-password-btn" id="showPasswordBtn">👁️ Show</button>
+                    <button type="button" class="show-password-btn" id="showPasswordBtn">👁️ Show</button>
                 </div>
             </div>
             <div class="remember-me">
                 <input type="checkbox" id="rememberMe">
                 <label for="rememberMe">Remember Me</label>
             </div>
-            <button class="login-btn" onclick="login()">Sign In</button>
+            <button class="login-btn" id="loginBtn">Sign In</button>
             <div class="error-message" id="errorMessage"></div>
         </div>
     </div>
@@ -258,8 +288,8 @@
             <h1>Noah's Toolbox</h1>
             <div class="user-info">
                 <span id="currentUser"></span>
-                <button class="admin-btn" id="adminBtn" onclick="openAdminPanel()" style="display:none;">Admin Panel</button>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="admin-btn" id="adminBtn" style="display:none;">Admin Panel</button>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
             </div>
         </div>
         <div class="main-content">
@@ -274,7 +304,7 @@
                     <option value="Completed">Completed</option>
                     <option value="Pending">Pending</option>
                 </select>
-                <button onclick="addWork()">Add Work</button>
+                <button id="addWorkBtn">Add Work</button>
             </div>
             <table>
                 <thead>
@@ -297,28 +327,31 @@
 
     <div class="modal" id="adminModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeAdminPanel()">&times;</span>
+            <span class="close-modal" id="closeModal">&times;</span>
             <h2>User Management</h2>
-            <div class="form-group">
-                <label>Add New User</label>
+            <div class="add-user-form">
+                <h3>Add New User</h3>
                 <input type="text" id="newUsername" placeholder="Username">
                 <input type="password" id="newPassword" placeholder="Password">
-                <input type="checkbox" id="newIsAdmin"> <label for="newIsAdmin">Make Admin</label>
-                <button onclick="addUser()">Add User</button>
+                <label><input type="checkbox" id="newIsAdmin"> Make Admin</label>
+                <button id="addUserBtn">Add User</button>
             </div>
-            <h3 style="margin-top: 20px;">Existing Users</h3>
+            <h3>Existing Users</h3>
             <div id="usersList"></div>
         </div>
     </div>
 
     <script>
+        // REPLACE THESE WITH YOUR SUPABASE CREDENTIALS
         const SUPABASE_URL = https://nggpymtnuuxfvgcuzemd.supabase.co;
         const SUPABASE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI;
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
 
-        // Password hashing using Web Crypto API
+        // Password hashing
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -327,7 +360,7 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Show/Hide password
+        // Show/Hide password toggle
         document.getElementById('showPasswordBtn').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             if (passwordInput.type === 'password') {
@@ -339,8 +372,8 @@
             }
         });
 
-        // Login function
-        async function login() {
+        // Login
+        document.getElementById('loginBtn').addEventListener('click', async function() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
@@ -353,40 +386,59 @@
                 return;
             }
 
+            console.log('Attempting login for:', username);
+
             try {
                 const passwordHash = await hashPassword(password);
+                console.log('Password hash:', passwordHash);
                 
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('users')
                     .select('*')
-                    .eq('username', username)
-                    .single();
+                    .eq('username', username);
 
-                if (error || !data) {
+                console.log('Query response:', data, error);
+
+                if (error) {
+                    console.error('Supabase error:', error);
+                    errorMessage.textContent = 'Database error: ' + error.message;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
                     errorMessage.textContent = 'Invalid username or password';
                     return;
                 }
 
-                if (data.password_hash !== passwordHash) {
+                const user = data[0];
+
+                if (user.password_hash !== passwordHash) {
                     errorMessage.textContent = 'Wrong password';
                     return;
                 }
 
-                currentUser = data;
+                currentUser = user;
                 
                 if (rememberMe) {
-                    localStorage.setItem('rememberedUser', JSON.stringify(data));
+                    localStorage.setItem('rememberedUser', JSON.stringify(user));
                 }
 
                 showApp();
             } catch (err) {
                 console.error('Login error:', err);
-                errorMessage.textContent = 'Login failed. Please try again.';
+                errorMessage.textContent = 'Login failed: ' + err.message;
             }
-        }
+        });
 
-        // Check for remembered user on load
-        window.addEventListener('load', async () => {
+        // Enter key to login
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginBtn').click();
+            }
+        });
+
+        // Check for remembered user
+        window.addEventListener('load', function() {
             const remembered = localStorage.getItem('rememberedUser');
             if (remembered) {
                 currentUser = JSON.parse(remembered);
@@ -397,7 +449,7 @@
         function showApp() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('currentUser').textContent = `Welcome, ${currentUser.username}`;
+            document.getElementById('currentUser').textContent = 'Welcome, ' + currentUser.username;
             
             if (currentUser.is_admin) {
                 document.getElementById('adminBtn').style.display = 'block';
@@ -406,7 +458,8 @@
             loadWork();
         }
 
-        function logout() {
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
             currentUser = null;
             localStorage.removeItem('rememberedUser');
             document.getElementById('loginContainer').style.display = 'flex';
@@ -414,11 +467,11 @@
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('errorMessage').textContent = '';
-        }
+        });
 
-        // Load work data
+        // Load work
         async function loadWork() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('work_data')
                 .select('*')
                 .eq('user_id', currentUser.username)
@@ -434,22 +487,20 @@
 
             data.forEach(work => {
                 const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${work.date}</td>
-                    <td>${work.project}</td>
-                    <td>${work.task}</td>
-                    <td>${work.location}</td>
-                    <td>${work.start_time}</td>
-                    <td>${work.end_time}</td>
-                    <td>${work.duration}</td>
-                    <td>${work.status}</td>
-                    <td><button class="delete-btn" onclick="deleteWork(${work.id})">Delete</button></td>
-                `;
+                row.innerHTML = '<td>' + work.date + '</td>' +
+                    '<td>' + work.project + '</td>' +
+                    '<td>' + work.task + '</td>' +
+                    '<td>' + work.location + '</td>' +
+                    '<td>' + work.start_time + '</td>' +
+                    '<td>' + work.end_time + '</td>' +
+                    '<td>' + work.duration + '</td>' +
+                    '<td>' + work.status + '</td>' +
+                    '<td><button class="delete-btn" onclick="deleteWork(' + work.id + ')">Delete</button></td>';
             });
         }
 
         // Add work
-        async function addWork() {
+        document.getElementById('addWorkBtn').addEventListener('click', async function() {
             const project = document.getElementById('projectInput').value;
             const task = document.getElementById('taskInput').value;
             const location = document.getElementById('locationInput').value;
@@ -464,22 +515,23 @@
 
             const duration = calculateDuration(startTime, endTime);
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('work_data')
                 .insert([{
                     user_id: currentUser.username,
-                    project,
-                    task,
-                    location,
+                    project: project,
+                    task: task,
+                    location: location,
                     start_time: startTime,
                     end_time: endTime,
-                    duration,
-                    status,
+                    duration: duration,
+                    status: status,
                     date: new Date().toISOString().split('T')[0]
                 }]);
 
             if (error) {
                 console.error('Error adding work:', error);
+                alert('Error adding work: ' + error.message);
                 return;
             }
 
@@ -490,13 +542,13 @@
             document.getElementById('endTime').value = '';
 
             loadWork();
-        }
+        });
 
         // Delete work
         async function deleteWork(id) {
             if (!confirm('Delete this entry?')) return;
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('work_data')
                 .delete()
                 .eq('id', id);
@@ -511,27 +563,31 @@
 
         function calculateDuration(start, end) {
             if (!start || !end) return '';
-            const [sh, sm] = start.split(':').map(Number);
-            const [eh, em] = end.split(':').map(Number);
+            const parts1 = start.split(':');
+            const parts2 = end.split(':');
+            const sh = parseInt(parts1[0]);
+            const sm = parseInt(parts1[1]);
+            const eh = parseInt(parts2[0]);
+            const em = parseInt(parts2[1]);
             let minutes = (eh * 60 + em) - (sh * 60 + sm);
             if (minutes < 0) minutes += 24 * 60;
             const hours = Math.floor(minutes / 60);
             const mins = minutes % 60;
-            return `${hours}h ${mins}m`;
+            return hours + 'h ' + mins + 'm';
         }
 
-        // Admin functions
-        function openAdminPanel() {
+        // Admin panel
+        document.getElementById('adminBtn').addEventListener('click', function() {
             document.getElementById('adminModal').style.display = 'flex';
             loadUsers();
-        }
+        });
 
-        function closeAdminPanel() {
+        document.getElementById('closeModal').addEventListener('click', function() {
             document.getElementById('adminModal').style.display = 'none';
-        }
+        });
 
         async function loadUsers() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('users')
                 .select('*')
                 .order('username');
@@ -547,17 +603,15 @@
             data.forEach(user => {
                 const div = document.createElement('div');
                 div.className = 'user-item';
-                div.innerHTML = `
-                    <span>${user.username} ${user.is_admin ? '(Admin)' : ''}</span>
-                    <button class="delete-btn" onclick="deleteUser('${user.username}')" ${user.username === currentUser.username ? 'disabled' : ''}>
-                        Delete
-                    </button>
-                `;
+                const isCurrentUser = user.username === currentUser.username;
+                div.innerHTML = '<span>' + user.username + (user.is_admin ? ' (Admin)' : '') + '</span>' +
+                    '<button class="delete-btn" onclick="deleteUser(\'' + user.username + '\')" ' + 
+                    (isCurrentUser ? 'disabled' : '') + '>Delete</button>';
                 usersList.appendChild(div);
             });
         }
 
-        async function addUser() {
+        document.getElementById('addUserBtn').addEventListener('click', async function() {
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
             const isAdmin = document.getElementById('newIsAdmin').checked;
@@ -569,10 +623,10 @@
 
             const passwordHash = await hashPassword(password);
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('users')
                 .insert([{
-                    username,
+                    username: username,
                     password_hash: passwordHash,
                     is_admin: isAdmin
                 }]);
@@ -587,12 +641,12 @@
             document.getElementById('newIsAdmin').checked = false;
 
             loadUsers();
-        }
+        });
 
         async function deleteUser(username) {
-            if (!confirm(`Delete user ${username}?`)) return;
+            if (!confirm('Delete user ' + username + '?')) return;
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('users')
                 .delete()
                 .eq('username', username);
@@ -604,11 +658,6 @@
 
             loadUsers();
         }
-
-        // Allow Enter key to login
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') login();
-        });
     </script>
 </body>
 </html>
