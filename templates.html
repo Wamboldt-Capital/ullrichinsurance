@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates - Noah's Toolbox</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f5f5f5; 
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .loading-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0a84ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            max-width: 500px;
+            margin: 100px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .error-screen h2 { color: #ff3b30; margin-bottom: 20px; }
+        .error-screen p { color: #666; margin-bottom: 30px; line-height: 1.6; }
+        .error-screen a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #0a84ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .error-screen a:hover { background: #0077ed; }
+        
+        .container { display: none; }
+        
+        .nav-menu {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: #0a84ff;
+            color: white;
+        }
+        
+        .nav-link.active {
+            background: #0a84ff;
+            color: white;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #0a84ff;
+            font-size: 24px;
+        }
+        
+        .header-info {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #0a84ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover { background: #0077ed; }
+        .btn.success { background: #10b981; }
+        .btn.success:hover { background: #059669; }
+        .btn.secondary { background: #6c757d; }
+        .btn.secondary:hover { background: #5a6268; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #0a84ff;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0a84ff;
+        }
+        
+        .preview-box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 20px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 2000;
+            display: none;
+        }
+        
+        .status.show { display: block; }
+        .status.error { background: #ef4444; }
+        
+        .template-selector {
+            margin-bottom: 20px;
+        }
+        
+        .template-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #0a84ff;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0a84ff;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .template-selector select:focus {
+            outline: none;
+            border-color: #0077ed;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Loading Templates...</p>
+    </div>
+
+    <div class="error-screen" id="errorScreen">
+        <h2>⚠️ Access Denied</h2>
+        <p id="errorMessage">Your session is invalid or has expired.</p>
+        <p>Please log in to access templates.</p>
+        <a href="index.html">Go to Login Page</a>
+    </div>
+
+    <div class="container" id="mainContent">
+        <div class="status" id="status"></div>
+        
+        <nav class="nav-menu">
+            <a href="toolbox.html" class="nav-link">🧰 Toolbox</a>
+            <a href="knowledge-base.html" class="nav-link">📚 Knowledge Base</a>
+            <a href="templates.html" class="nav-link active">📋 Templates</a>
+        </nav>
+        
+        <div class="header">
+            <div>
+                <h1>📋 Templates</h1>
+                <p class="header-info">User: <span id="currentUser"></span></p>
+            </div>
+            <div class="header-buttons">
+                <button class="btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel - Input Form -->
+            <div class="panel">
+                <div class="template-selector">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select Template:</label>
+                    <select id="templateSelect">
+                        <option value="email">Email Template</option>
+                        <option value="quote">Insurance Quote</option>
+                        <option value="followup">Follow-up Message</option>
+                        <option value="custom">Custom Template</option>
+                    </select>
+                </div>
+                
+                <h2>Fill in the fields:</h2>
+                <div id="formFields"></div>
+            </div>
+
+            <!-- Right Panel - Preview & Copy -->
+            <div class="panel">
+                <h2>Preview:</h2>
+                <div class="preview-box" id="previewBox">Your template will appear here...</div>
+                <div class="action-buttons">
+                    <button class="btn success" id="copyBtn">📋 Copy to Clipboard</button>
+                    <button class="btn secondary" id="clearBtn">🔄 Clear Form</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
+            
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Session validation
+            async function validateSession(sessionToken) {
+                if (!sessionToken) return null;
+                const result = await supabase
+                    .from('sessions')
+                    .select('*, users(*)')
+                    .eq('session_token', sessionToken)
+                    .gt('expires_at', new Date().toISOString())
+                    .single();
+                return result.error || !result.data ? null : result.data.users;
+            }
+
+            async function deleteSession(sessionToken) {
+                if (!sessionToken) return;
+                await supabase.from('sessions').delete().eq('session_token', sessionToken);
+                localStorage.removeItem('sessionToken');
+                sessionStorage.removeItem('sessionToken');
+            }
+
+            function showError(message) {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('errorScreen').style.display = 'block';
+                document.getElementById('errorMessage').textContent = message;
+            }
+
+            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+            if (!sessionToken) {
+                showError('No active session found. Please log in.');
+                return;
+            }
+
+            const user = await validateSession(sessionToken);
+            if (!user) {
+                showError('Your session is invalid or has expired. Please log in again.');
+                localStorage.removeItem('sessionToken');
+                sessionStorage.removeItem('sessionToken');
+                return;
+            }
+
+            // Show main content
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('currentUser').textContent = user.display_name || user.username;
+
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    await deleteSession(sessionToken);
+                    window.location.href = 'https://ireallylovetexas.github.io/ullrichinsurance/';
+                }
+            });
+
+            // Template definitions
+            const templates = {
+                email: {
+                    fields: [
+                        { name: 'recipient', label: 'Recipient Name', type: 'text' },
+                        { name: 'subject', label: 'Subject', type: 'text' },
+                        { name: 'greeting', label: 'Greeting', type: 'text', placeholder: 'e.g., Hi, Hello, Dear' },
+                        { name: 'body', label: 'Message Body', type: 'textarea' },
+                        { name: 'closing', label: 'Closing', type: 'text', placeholder: 'e.g., Best regards, Sincerely' },
+                        { name: 'signature', label: 'Your Name', type: 'text' }
+                    ],
+                    template: (data) => `Subject: ${data.subject}
+
+${data.greeting} ${data.recipient},
+
+${data.body}
+
+${data.closing},
+${data.signature}`
+                },
+                quote: {
+                    fields: [
+                        { name: 'clientName', label: 'Client Name', type: 'text' },
+                        { name: 'policyType', label: 'Policy Type', type: 'text', placeholder: 'e.g., Auto, Home, Life' },
+                        { name: 'coverageAmount', label: 'Coverage Amount', type: 'text', placeholder: 'e.g., $100,000' },
+                        { name: 'premium', label: 'Monthly Premium', type: 'text', placeholder: 'e.g., $150' },
+                        { name: 'term', label: 'Policy Term', type: 'text', placeholder: 'e.g., 12 months' },
+                        { name: 'additionalNotes', label: 'Additional Notes', type: 'textarea' }
+                    ],
+                    template: (data) => `INSURANCE QUOTE
+
+Client: ${data.clientName}
+Policy Type: ${data.policyType}
+Coverage Amount: ${data.coverageAmount}
+Monthly Premium: ${data.premium}
+Policy Term: ${data.term}
+
+${data.additionalNotes ? 'Additional Notes:\n' + data.additionalNotes : ''}
+
+Please review this quote and let me know if you have any questions.`
+                },
+                followup: {
+                    fields: [
+                        { name: 'clientName', label: 'Client Name', type: 'text' },
+                        { name: 'previousContact', label: 'Previous Contact Date', type: 'text' },
+                        { name: 'topic', label: 'Topic/Policy', type: 'text' },
+                        { name: 'nextSteps', label: 'Next Steps', type: 'textarea' }
+                    ],
+                    template: (data) => `Hi ${data.clientName},
+
+I wanted to follow up on our conversation from ${data.previousContact} regarding ${data.topic}.
+
+${data.nextSteps}
+
+Please let me know if you have any questions or if there's anything else I can help you with.
+
+Best regards`
+                },
+                custom: {
+                    fields: [
+                        { name: 'customTemplate', label: 'Custom Template', type: 'textarea', placeholder: 'Enter your custom template here...' }
+                    ],
+                    template: (data) => data.customTemplate
+                }
+            };
+
+            let currentTemplate = 'email';
+            let formData = {};
+
+            function showStatus(message, type = 'success') {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = message;
+                statusEl.className = `status show ${type === 'error' ? 'error' : ''}`;
+                setTimeout(() => statusEl.className = 'status', 3000);
+            }
+
+            function renderForm() {
+                const formFields = document.getElementById('formFields');
+                formFields.innerHTML = '';
+                
+                const template = templates[currentTemplate];
+                
+                template.fields.forEach(field => {
+                    const formGroup = document.createElement('div');
+                    formGroup.className = 'form-group';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = field.label;
+                    
+                    let input;
+                    if (field.type === 'textarea') {
+                        input = document.createElement('textarea');
+                    } else {
+                        input = document.createElement('input');
+                        input.type = field.type;
+                    }
+                    
+                    input.id = field.name;
+                    input.placeholder = field.placeholder || '';
+                    input.value = formData[field.name] || '';
+                    
+                    input.addEventListener('input', () => {
+                        formData[field.name] = input.value;
+                        updatePreview();
+                    });
+                    
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    formFields.appendChild(formGroup);
+                });
+            }
+
+            function updatePreview() {
+                const template = templates[currentTemplate];
+                const preview = template.template(formData);
+                document.getElementById('previewBox').textContent = preview || 'Your template will appear here...';
+            }
+
+            function clearForm() {
+                formData = {};
+                renderForm();
+                updatePreview();
+            }
+
+            async function copyToClipboard() {
+                const previewText = document.getElementById('previewBox').textContent;
+                
+                if (previewText === 'Your template will appear here...') {
+                    showStatus('Please fill in the template first', 'error');
+                    return;
+                }
+                
+                try {
+                    await navigator.clipboard.writeText(previewText);
+                    showStatus('✓ Copied to clipboard!');
+                } catch (err) {
+                    showStatus('Failed to copy', 'error');
+                }
+            }
+
+            // Event listeners
+            document.getElementById('templateSelect').addEventListener('change', (e) => {
+                currentTemplate = e.target.value;
+                formData = {};
+                renderForm();
+                updatePreview();
+            });
+
+            document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+            document.getElementById('clearBtn').addEventListener('click', clearForm);
+
+            // Initialize
+            renderForm();
+            updatePreview();
+        })();
+    </script>
+</body>
+</html>
