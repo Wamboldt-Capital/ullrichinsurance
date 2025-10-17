@@ -3,51 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noah's Toolbox</title>
+    <title>Noah's Toolbox - Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: white; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
         .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        .login-box h1 { color: #2563eb; margin-bottom: 30px; text-align: center; }
+        .login-box h1 { color: #0a84ff; margin-bottom: 30px; text-align: center; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
         .password-wrapper { position: relative; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
         .password-wrapper input { padding-right: 70px; }
-        .form-group input:focus { outline: none; border-color: #2563eb; }
-        .show-password-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; padding: 5px 8px; }
+        .form-group input:focus { outline: none; border-color: #0a84ff; }
+        .show-password-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #0a84ff; cursor: pointer; font-size: 12px; padding: 5px 8px; }
         .show-password-btn:hover { text-decoration: underline; }
         .remember-me { display: flex; align-items: center; margin-bottom: 20px; }
         .remember-me input { width: auto; margin-right: 8px; }
-        .login-btn { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 500; }
-        .login-btn:hover { background: #1d4ed8; }
-        .error-message { color: #dc2626; font-size: 14px; margin-top: 10px; text-align: center; }
-        .app-container { display: none; }
+        .login-btn { width: 100%; padding: 12px; background: #0a84ff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 500; }
+        .login-btn:hover { background: #0077ed; }
+        .error-message { color: #ff3b30; font-size: 14px; margin-top: 10px; text-align: center; }
+        .success-message { color: #10b981; font-size: 14px; margin-top: 10px; text-align: center; }
+        
+        .admin-container, .toolbox-container { display: none; min-height: 100vh; background: white; }
         .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { color: #2563eb; font-size: 24px; }
+        .header h1 { color: #0a84ff; font-size: 24px; }
         .user-info { display: flex; align-items: center; gap: 15px; }
-        .logout-btn, .admin-btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .logout-btn:hover, .admin-btn:hover { background: #1d4ed8; }
-        .main-content { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .controls input, .controls select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        .controls button { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .controls button:hover { background: #1d4ed8; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; font-weight: 600; }
-        .delete-btn { padding: 4px 8px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .delete-btn:hover { background: #b91c1c; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .modal-content h2, .modal-content h3 { margin-bottom: 15px; color: #2563eb; }
-        .close-modal { float: right; font-size: 24px; cursor: pointer; color: #999; }
-        .user-item { padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .add-user-form { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
-        .add-user-form input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .add-user-form button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .logout-btn, .toolbox-btn { padding: 8px 16px; background: #0a84ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .logout-btn:hover, .toolbox-btn:hover { background: #0077ed; }
+        
+        .admin-content { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .admin-section { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .admin-section h2 { color: #0a84ff; margin-bottom: 20px; }
+        .user-list { display: flex; flex-direction: column; gap: 10px; }
+        .user-item { padding: 15px; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .delete-btn { padding: 6px 12px; background: #ff3b30; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .delete-btn:hover { background: #d32f2f; }
+        .delete-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .add-user-btn { padding: 10px 20px; background: #0a84ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 10px; }
+        .add-user-btn:hover { background: #0077ed; }
+        
+        .password-section { margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -74,62 +71,70 @@
         </div>
     </div>
 
-    <div class="app-container" id="appContainer">
+    <div class="admin-container" id="adminContainer">
         <div class="header">
-            <h1>Noah's Toolbox</h1>
+            <h1>Admin Panel</h1>
             <div class="user-info">
-                <span id="currentUser"></span>
-                <button class="admin-btn" id="adminBtn" style="display:none;">Admin Panel</button>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
+                <span id="adminUsername"></span>
+                <button class="logout-btn" id="adminLogoutBtn">Logout</button>
             </div>
         </div>
-        <div class="main-content">
-            <div class="controls">
-                <input type="text" id="projectInput" placeholder="Project">
-                <input type="text" id="taskInput" placeholder="Task">
-                <input type="text" id="locationInput" placeholder="Location">
-                <input type="time" id="startTime">
-                <input type="time" id="endTime">
-                <select id="statusSelect">
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Pending">Pending</option>
-                </select>
-                <button id="addWorkBtn">Add Work</button>
+        <div class="admin-content">
+            <div class="admin-section">
+                <h2>Change Your Password</h2>
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                </div>
+                <button class="add-user-btn" id="changePasswordBtn">Change Password</button>
+                <div class="error-message" id="passwordError"></div>
+                <div class="success-message" id="passwordSuccess"></div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Project</th>
-                        <th>Task</th>
-                        <th>Location</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="workTable"></tbody>
-            </table>
+
+            <div class="admin-section">
+                <h2>User Management</h2>
+                <div class="password-section">
+                    <h3 style="margin-bottom: 15px;">Add New User</h3>
+                    <div class="form-group">
+                        <label for="newUsername">Username</label>
+                        <input type="text" id="newUsername" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label for="newUserPassword">Password</label>
+                        <input type="password" id="newUserPassword" placeholder="Enter password">
+                    </div>
+                    <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" id="newIsAdmin" style="margin-right: 8px;">
+                        Make Admin
+                    </label>
+                    <button class="add-user-btn" id="addUserBtn">Add User</button>
+                    <div class="error-message" id="addUserError"></div>
+                    <div class="success-message" id="addUserSuccess"></div>
+                </div>
+                
+                <h3 style="margin: 20px 0 10px 0;">Existing Users</h3>
+                <div class="user-list" id="usersList"></div>
+            </div>
         </div>
     </div>
 
-    <div class="modal" id="adminModal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeModal">&times;</span>
-            <h2>User Management</h2>
-            <div class="add-user-form">
-                <h3>Add New User</h3>
-                <input type="text" id="newUsername" placeholder="Username">
-                <input type="password" id="newPassword" placeholder="Password">
-                <label><input type="checkbox" id="newIsAdmin"> Make Admin</label>
-                <button id="addUserBtn">Add User</button>
+    <div class="toolbox-container" id="toolboxContainer">
+        <div class="header">
+            <h1>Noah's Toolbox</h1>
+            <div class="user-info">
+                <span id="toolboxUsername"></span>
+                <button class="logout-btn" id="toolboxLogoutBtn">Logout</button>
             </div>
-            <h3>Existing Users</h3>
-            <div id="usersList"></div>
         </div>
+        <iframe id="toolboxFrame" style="width: 100%; height: calc(100vh - 70px); border: none;"></iframe>
     </div>
 
     <script>
@@ -170,29 +175,21 @@
                 return;
             }
 
-            console.log('Attempting login for username:', username);
-
             try {
                 const passwordHash = await hashPassword(password);
-                console.log('Generated password hash:', passwordHash);
-                
                 const result = await supabaseClient.from('users').select('*').eq('username', username);
-                console.log('Supabase query result:', result);
 
                 if (result.error) {
-                    console.error('Supabase error:', result.error);
                     errorMessage.textContent = 'Database error: ' + result.error.message;
                     return;
                 }
 
                 if (!result.data || result.data.length === 0) {
-                    console.log('No user found with username:', username);
                     errorMessage.textContent = 'Invalid username or password';
                     return;
                 }
 
                 const user = result.data[0];
-                console.log('Found user:', user.username, 'Expected hash:', user.password_hash, 'Provided hash:', passwordHash);
 
                 if (user.password_hash !== passwordHash) {
                     errorMessage.textContent = 'Wrong password';
@@ -203,9 +200,13 @@
                 if (rememberMe) {
                     localStorage.setItem('rememberedUser', JSON.stringify(user));
                 }
-                showApp();
+                
+                if (user.is_admin) {
+                    showAdminPanel();
+                } else {
+                    showToolbox();
+                }
             } catch (err) {
-                console.error('Login error:', err);
                 errorMessage.textContent = 'Login failed: ' + err.message;
             }
         });
@@ -220,178 +221,80 @@
             const remembered = localStorage.getItem('rememberedUser');
             if (remembered) {
                 currentUser = JSON.parse(remembered);
-                showApp();
+                if (currentUser.is_admin) {
+                    showAdminPanel();
+                } else {
+                    showToolbox();
+                }
             }
         });
 
-        function showApp() {
+        function showAdminPanel() {
             document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('currentUser').textContent = 'Welcome, ' + currentUser.username;
-            if (currentUser.is_admin) {
-                document.getElementById('adminBtn').style.display = 'block';
-            }
-            loadWork();
-        }
-
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            currentUser = null;
-            localStorage.removeItem('rememberedUser');
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('errorMessage').textContent = '';
-        });
-
-        async function loadWork() {
-            const result = await supabaseClient.from('work_data').select('*').eq('user_id', currentUser.username).order('date', { ascending: false });
-            if (result.error) {
-                console.error('Error loading work:', result.error);
-                return;
-            }
-            const tbody = document.getElementById('workTable');
-            tbody.innerHTML = '';
-            if (result.data) {
-                result.data.forEach(function(work) {
-                    const row = tbody.insertRow();
-                    row.innerHTML = '<td>' + work.date + '</td><td>' + work.project + '</td><td>' + work.task + '</td><td>' + work.location + '</td><td>' + work.start_time + '</td><td>' + work.end_time + '</td><td>' + work.duration + '</td><td>' + work.status + '</td><td><button class="delete-btn" onclick="deleteWork(' + work.id + ')">Delete</button></td>';
-                });
-            }
-        }
-
-        document.getElementById('addWorkBtn').addEventListener('click', async function() {
-            const project = document.getElementById('projectInput').value;
-            const task = document.getElementById('taskInput').value;
-            const location = document.getElementById('locationInput').value;
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const status = document.getElementById('statusSelect').value;
-
-            if (!project || !task) {
-                alert('Please fill in at least Project and Task');
-                return;
-            }
-
-            const duration = calculateDuration(startTime, endTime);
-            const result = await supabaseClient.from('work_data').insert([{
-                user_id: currentUser.username,
-                project: project,
-                task: task,
-                location: location,
-                start_time: startTime,
-                end_time: endTime,
-                duration: duration,
-                status: status,
-                date: new Date().toISOString().split('T')[0]
-            }]);
-
-            if (result.error) {
-                console.error('Error adding work:', result.error);
-                alert('Error adding work: ' + result.error.message);
-                return;
-            }
-
-            document.getElementById('projectInput').value = '';
-            document.getElementById('taskInput').value = '';
-            document.getElementById('locationInput').value = '';
-            document.getElementById('startTime').value = '';
-            document.getElementById('endTime').value = '';
-            loadWork();
-        });
-
-        async function deleteWork(id) {
-            if (!confirm('Delete this entry?')) return;
-            const result = await supabaseClient.from('work_data').delete().eq('id', id);
-            if (result.error) {
-                console.error('Error deleting work:', result.error);
-                return;
-            }
-            loadWork();
-        }
-
-        function calculateDuration(start, end) {
-            if (!start || !end) return '';
-            const parts1 = start.split(':');
-            const parts2 = end.split(':');
-            const sh = parseInt(parts1[0]);
-            const sm = parseInt(parts1[1]);
-            const eh = parseInt(parts2[0]);
-            const em = parseInt(parts2[1]);
-            let minutes = (eh * 60 + em) - (sh * 60 + sm);
-            if (minutes < 0) minutes += 24 * 60;
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            return hours + 'h ' + mins + 'm';
-        }
-
-        document.getElementById('adminBtn').addEventListener('click', function() {
-            document.getElementById('adminModal').style.display = 'flex';
-            loadUsers();
-        });
-
-        document.getElementById('closeModal').addEventListener('click', function() {
-            document.getElementById('adminModal').style.display = 'none';
-        });
-
-        async function loadUsers() {
-            const result = await supabaseClient.from('users').select('*').order('username');
-            if (result.error) {
-                console.error('Error loading users:', result.error);
-                return;
-            }
-            const usersList = document.getElementById('usersList');
-            usersList.innerHTML = '';
-            if (result.data) {
-                result.data.forEach(function(user) {
-                    const div = document.createElement('div');
-                    div.className = 'user-item';
-                    const isCurrentUser = user.username === currentUser.username;
-                    const adminText = user.is_admin ? ' (Admin)' : '';
-                    const disabledAttr = isCurrentUser ? 'disabled' : '';
-                    div.innerHTML = '<span>' + user.username + adminText + '</span><button class="delete-btn" onclick="deleteUser(\'' + user.username + '\')" ' + disabledAttr + '>Delete</button>';
-                    usersList.appendChild(div);
-                });
-            }
-        }
-
-        document.getElementById('addUserBtn').addEventListener('click', async function() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value;
-            const isAdmin = document.getElementById('newIsAdmin').checked;
-
-            if (!username || !password) {
-                alert('Please enter username and password');
-                return;
-            }
-
-            const passwordHash = await hashPassword(password);
-            const result = await supabaseClient.from('users').insert([{
-                username: username,
-                password_hash: passwordHash,
-                is_admin: isAdmin
-            }]);
-
-            if (result.error) {
-                alert('Error adding user: ' + result.error.message);
-                return;
-            }
-
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('newIsAdmin').checked = false;
-            loadUsers();
-        });
-
-        async function deleteUser(username) {
-            if (!confirm('Delete user ' + username + '?')) return;
-            const result = await supabaseClient.from('users').delete().eq('username', username);
-            if (result.error) {
-                alert('Error deleting user: ' + result.error.message);
-                return;
-            }
+            document.getElementById('adminContainer').style.display = 'block';
+            document.getElementById('adminUsername').textContent = 'Admin: ' + currentUser.username;
             loadUsers();
         }
-    </script>
-</body>
-</html>
+
+        function showToolbox() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('toolboxContainer').style.display = 'block';
+            document.getElementById('toolboxUsername').textContent = currentUser.username;
+            
+            const toolboxHTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Noah's Toolbox</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family: system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;max-width:900px;margin:24px auto;padding:16px;color:#0b1220}
+    h1{font-size:1.4rem;margin:0 0 20px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+    .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
+    .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
+    .name{font-weight:600;flex:1;white-space:pre-line}
+    .name[contenteditable]{padding:2px 6px;border-radius:6px}
+    .btn{padding:12px 20px;border-radius:8px;border:0;cursor:pointer;font-size:1rem;font-weight:600;margin-top:8px}
+    .btn.start,.btn.stop{width:100%;align-self:flex-end}
+    .start{background:#0a84ff;color:white}
+    .stop{background:#ff3b30;color:white}
+    .meta{font-size:0.9rem;color:#334155;display:flex;flex-direction:column;align-items:flex-start;font-variant-numeric:tabular-nums}
+    .big{font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+    .small{font-size:0.85rem;padding:6px 8px}
+    .wide{grid-column:1/-1}
+    input[type=number]{width:70px;padding:6px}
+    .secondary{background:#f3f4f6;border:1px solid #e6e9ee}
+    .list-title-wrapper{display:flex;align-items:center;gap:12px;border-bottom:2px solid #e6e9ee;margin-bottom:16px}
+    .list-title{font-size:1.2rem;font-weight:600;border:none;padding:8px 4px;flex:1}
+    .list-title:focus{outline:none}
+    .list-title-wrapper:focus-within{border-bottom-color:#0a84ff}
+    .list-total-header{font-weight:700;font-size:1.1rem;color:#0a84ff;padding:8px 12px;background:white;border-radius:6px;white-space:nowrap}
+    .todo-input{flex:1;padding:8px 12px;border:1px solid #e6e9ee;border-radius:6px;font-size:0.95rem}
+    .todo-input:focus{outline:none;border-color:#0a84ff}
+    .todo-list{display:flex;flex-direction:column;gap:8px}
+    .todo-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9fafb;border-radius:6px}
+    .todo-text{flex:1;font-size:0.95rem}
+    .delete-btn{background:#ff3b30;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.85rem}
+    .status{position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:10px 20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:1000;display:none}
+    .status.show{display:block}
+    .status.error{background:#ef4444}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
+</head>
+<body>
+  <div class="status" id="status"></div>
+  <h1>Noah's Toolbox</h1>
+  <div id="sections" class="grid"></div>
+  <div class="lists-grid">
+    <div class="card"><div class="list-title-wrapper"><input type="text" class="list-title" data-list="0" placeholder="List Title" /><span class="list-total-header" data-list="0"></span></div><div class="todo-list" data-list="0"></div><div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;"><input type="text" class="todo-input" data-list="0" placeholder="Add new item..." /><button class="btn small add-item-btn" data-list="0">Add</button></div></div>
+    <div class="card"><div class="list-title-wrapper"><input type="text" class="list-title" data-list="1" placeholder="List Title" /><span class="list-total-header" data-list="1"></span></div><div class="todo-list" data-list="1"></div><div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;"><input type="text" class="todo-input" data-list="1" placeholder="Add new item..." /><button class="btn small add-item-btn" data-list="1">Add</button></div></div>
+    <div class="card"><div class="list-title-wrapper"><input type="text" class="list-title" data-list="2" placeholder="List Title" /><span class="list-total-header" data-list="2"></span></div><div class="todo-list" data-list="2"></div><div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;"><input type="text" class="todo-input" data-list="2" placeholder="Add new item..." /><button class="btn small add-item-btn" data-list="2">Add</button></div></div>
+    <div class="card"><div class="list-title-wrapper"><input type="text" class="list-title" data-list="3" placeholder="List Title" /><span class="list-total-header" data-list="3"></span></div><div class="todo-list" data-list="3"></div><div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;"><input type="text" class="todo-input" data-list="3" placeholder="Add new item..." /><button class="btn small add-item-btn" data-list="3">Add</button></div></div>
+    <div class="card"><div class="list-title-wrapper"><input type="text" class="list-title" data-list="4" placeholder="List Title" /><span class="list-total-header" data-list="4"></span></div><div class="todo-list" data-list="4"></div><div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;"><input type="text" class="todo-input" data-list="4" placeholder="Add new item..." /><button class="btn small add-item-btn" data-list="4">Add</button></div></div>
+    <div class="card"><div class="list-title-wrapper"><input type="text" class="list-title" data-list="5" placeholder="List Title" /><span class="list-total-header" data-list="5"></span></div><div class="todo-list" data-list="5"></div><div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;"><input type="text" class="todo-input" data-list="5" placeholder="Add new item..." /><button class="btn small add-item-btn" data-list="5">Add</button></div></div>
+  </div>
+  <div class="card wide"><div style="display:flex;gap:8px;align-items:center;"><button id="exportBtn" class="btn small" style="flex:1;max-width:150px">Export CSV</button><button id="resetBtn" class="btn small secondary" style="flex:1;max-width:150px">Reset Today</button><div style="margin-left:auto">Date: <span id="dateLabel"></span></div></div></div>
+<script>
+const SUPABASE_URL='${SUPABASE_URL}';const SUPABASE_ANON_KEY='${SUPABASE_KEY}';const USER_ID='${currentUser.username}';let supabase;try{supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}catch(e){console.error('Supabase init error:',e)}const NUM=9;const NUM_LISTS=6;const sectionsEl=document.getElementById('sections');const exportBtn=document.getElementById('exportBtn');const resetBtn=document.getElementById('resetBtn');const dateLabel=document.getElementById('dateLabel');const todayKey=()=>{const d=new Date();const year=d.getFullYear();const month=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return year+'-'+month+'-'+day};const formatDate=(d)=>{const date=new Date(d);const month=String(date.getMonth()+1).padStart(2,'0');const day=String(date.getDate()).padStart(2,'0');const year=date.getFullYear();return month+'-'+day+'-'+year};dateLabel.textContent=formatDate(new Date());const formatSecs=s=>{s=Math.max(0,Math.round(s));const hours=Math.floor(s/3600);const mins=Math.floor((s%3600)/60);const secs=s%60;if(hours>0)return hours+'h '+String(mins).padStart(2,'0')+'m';return String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0')};const defaultNames=['Automations','Email/Text','Fixing Post-Bound Policy Issues','Follow Up','In-Bound Calls','Interviews','Loom Presentations','Requotes','New Business'];const defaultListTitles=['Interviews Done','Loom Presentations','New Business Submission','New Business Premium','Requote Submission','Requote Premium'];let names=[...defaultNames];let totals=Array.from({length:NUM},()=>0);let active=null;let listTitles=[...defaultListTitles];let listData=Array.from({length:NUM_LISTS},()=>({items:[]}));function showStatus(msg,type='saved'){const el=document.getElementById('status');el.textContent=msg;el.className='status show '+(type==='error'?'error':'');setTimeout(()=>{el.className='status'},3000)}async function saveData(){if(!supabase)return;try{const today=todayKey();const{error}=await supabase.from('work_data').upsert([{user_id:USER_ID,date:today,names:JSON.stringify(names),totals:JSON.stringify(totals),active:JSON.stringify(active),list_titles:JSON.stringify(listTitles),list_items:JSON.stringify(listData.map(l=>l.items))}],{onConflict:'user_id,date'});if(error){console.error('Supabase error:',error);showStatus('Error saving','error')}else{showStatus('Saved ✓','saved')}}catch(e){console.error('Error saving:',e)}}async function loadData(){if(!supabase)return;try{const today=todayKey();const{data,error}=await supabase.from('work_data').select('*').eq('user_id',USER_ID).eq('date',today).single();if(error){if(error.code!=='PGRST116'){console.error('Error loading:',error)}return}if(data){names=JSON.parse(data.names||JSON.stringify(defaultNames));totals=JSON.parse(data.totals||JSON.stringify(Array(NUM).fill(0)));const loadedActive=JSON.parse(data.active||'null');if(loadedActive&&loadedActive.index!==-1&&loadedActive.start){const elapsed=Math.round((Date.now()-loadedActive.start)/1000);totals[loadedActive.index]=(totals[loadedActive.index]||0)+elapsed;active=null;await saveData()}else{active=loadedActive}listTitles=JSON.parse(data.list_titles||JSON.stringify(defaultListTitles));const items=JSON.parse(data.list_items||'[]');listData=items.map((itemList,i)=>({items:itemList||[]}))}}catch(e){console.error('Error loading:',e)}}const elems=[];function makeSection(i){const card=document.createElement('div');card.className='card';const header=document.createElement('div');header.className='section-header';const name=document.createElement('div');name.className='name';name.contentEditable=true;name.spellcheck=false;name.textContent=names[i];name.addEventListener('blur',()=>{names[i]=name.textContent.trim()||'Section '+(i+1);saveData()});name.addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();name.blur()}});const rightSide=document.createElement('div');rightSide.className='meta';const total=document.createElement('div');total.textContent='Today: '+formatSecs(totals[i]);const running=document.createElement('div');running.className='running';running.textContent='Current: 00:00';rightSide.appendChild(total);rightSide.appendChild(running);header.appendChild(name);header.appendChild(rightSide);const btn=document.createElement('button');btn.className='btn start';btn.textContent='Start';card.appendChild(header);card.appendChild(btn);btn.addEventListener('click',()=>{if(active&&active.index===i){stopActive()}else{startSection(i)}});return{card,btn,running,total,name}}for(let i=0;i<NUM;i++){const obj=makeSection(i);elems.push(obj);sectionsEl.appendChild(obj.card)}function refreshAll(){for(let i=0;i<NUM;i++){elems[i].name.textContent=names[i];elems[i].total.textContent='Today: '+formatSecs(totals[i]);if(active&&active.index===i){elems[i].btn.classList.remove('start');elems[i].btn.classList.add('stop');elems[i].btn.textContent='Stop'}else{elems[i].btn.classList.remove('stop');elems[i].btn.classList.add('start');elems[i].btn.textContent='Start';elems[i].running.textContent='Current: 00:00'}}}function startSection(i){const now=Date.now();if(active&&active.index!==i){const delta=Math.round((now-active.start)/1000);totals[active.index]=(totals[active.index]||0)+delta}active={index:i,start:now};saveData();refreshAll()}function stopActive(){if(!active)return;const now=Date.now();const delta=Math.round((now-active.start)/1000);totals[active.index]=(totals[active.index]||0)+delta;active=null;saveData();refreshAll()}setInterval(()=>{if(active){const now=Date.now();const sec=Math.round((now-active.start)/1000);elems[active.index].running.textContent='Current: '+formatSecs(sec);elems[active.index].total.textContent='Today: '+formatSecs(totals[active.index]+sec)}},500);const renderListItems=(index)=>{const todoListEl=document.querySelector('.todo-list[data-list="'+index+'"]');const totalEl=document.querySelector('.list-total-header[data-list="'+index+'"]');const hasTotals=index===3||index===5;todoListEl.innerHTML='';let total=0;listData[index].items.forEach((item,idx)=>{const div=document.createElement('div');div.className='todo-item';const text=document.createElement('div');text.className='todo-text';text.textContent=item;if(hasTotals){const numValue=parseFloat(item.replace(/[^0-9.-]/g,''));if(!isNaN(numValue)){total+=numValue}}const deleteBtn=document.createElement('button');deleteBtn.className='delete-btn';deleteBtn.textContent='Delete';deleteBtn.addEventListener('click',()=>{listData[index].items.splice(idx,1);saveData();renderListItems(index)});div.appendChild(text);div.appendChild(deleteBtn);todoListEl.appendChild(div)});if(hasTotals&&listData[index].items.length>0){totalEl.textContent=total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}else if(listData[index].items.length>0){totalEl.text
