@@ -1,560 +1,662 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noah's Toolbox - Login</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
-        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        .login-box h1 { color: #0a84ff; margin-bottom: 30px; text-align: center; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .password-wrapper { position: relative; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        .password-wrapper input { padding-right: 70px; }
-        .form-group input:focus { outline: none; border-color: #0a84ff; }
-        .show-password-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #0a84ff; cursor: pointer; font-size: 12px; padding: 5px 8px; }
-        .show-password-btn:hover { text-decoration: underline; }
-        .remember-me { display: flex; align-items: center; margin-bottom: 20px; }
-        .remember-me input { width: auto; margin-right: 8px; }
-        .login-btn { width: 100%; padding: 12px; background: #0a84ff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 500; }
-        .login-btn:hover { background: #0077ed; }
-        .error-message { color: #ff3b30; font-size: 14px; margin-top: 10px; text-align: center; }
-        .success-message { color: #10b981; font-size: 14px; margin-top: 10px; text-align: center; }
-        
-        .admin-container { display: none; min-height: 100vh; background: white; }
-        .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { color: #0a84ff; font-size: 24px; }
-        .user-info { display: flex; align-items: center; gap: 15px; }
-        .logout-btn, .toolbox-btn { padding: 8px 16px; background: #0a84ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .logout-btn:hover, .toolbox-btn:hover { background: #0077ed; }
-        
-        .admin-content { max-width: 800px; margin: 40px auto; padding: 0 20px; }
-        .admin-section { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .admin-section h2 { color: #0a84ff; margin-bottom: 20px; }
-        .user-list { display: flex; flex-direction: column; gap: 10px; }
-        .user-item { padding: 15px; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        .user-actions { display: flex; gap: 8px; }
-        .delete-btn, .change-password-btn { padding: 6px 12px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .delete-btn { background: #ff3b30; }
-        .delete-btn:hover { background: #d32f2f; }
-        .delete-btn:disabled { background: #ccc; cursor: not-allowed; }
-        .change-password-btn { background: #0a84ff; }
-        .change-password-btn:hover { background: #0077ed; }
-        .add-user-btn { padding: 10px 20px; background: #0a84ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 10px; width: 100%; }
-        .add-user-btn:hover { background: #0077ed; }
-        
-        .toolbox-link { padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; margin-top: 20px; }
-        .toolbox-link:hover { background: #059669; }
-
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-header h2 { color: #0a84ff; margin: 0; }
-        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
-        .close-modal:hover { color: #333; }
-    </style>
+  <meta charset="utf-8" />
+  <title>Noah's Toolbox</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family: system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;max-width:900px;margin:24px auto;padding:16px;color:#0b1220}
+    h1{font-size:1.4rem;margin:0 0 20px}
+    .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:12px 16px;background:#f9fafb;border-radius:8px;border:1px solid #e6e9ee}
+    .user-display{font-weight:600;color:#0a84ff}
+    .logout-btn{padding:8px 16px;background:#ff3b30;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600}
+    .logout-btn:hover{background:#d32f2f}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+    .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
+    .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
+    .name{font-weight:600;flex:1;white-space:pre-line}
+    .name[contenteditable]{padding:2px 6px;border-radius:6px}
+    .btn{padding:12px 20px;border-radius:8px;border:0;cursor:pointer;font-size:1rem;font-weight:600;margin-top:8px}
+    .btn.start,.btn.stop{width:100%;align-self:flex-end}
+    .start{background:#0a84ff;color:white}
+    .stop{background:#ff3b30;color:white}
+    .meta{font-size:0.9rem;color:#334155;display:flex;flex-direction:column;align-items:flex-start;font-variant-numeric:tabular-nums}
+    .big{font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+    .small{font-size:0.85rem;padding:6px 8px}
+    .wide{grid-column:1/-1}
+    input[type=number]{width:70px;padding:6px}
+    .secondary{background:#f3f4f6;border:1px solid #e6e9ee}
+    .list-title-wrapper{display:flex;align-items:center;gap:12px;border-bottom:2px solid #e6e9ee;margin-bottom:16px}
+    .list-title{font-size:1.2rem;font-weight:600;border:none;padding:8px 4px;flex:1}
+    .list-title:focus{outline:none}
+    .list-title-wrapper:focus-within{border-bottom-color:#0a84ff}
+    .list-total-header{font-weight:700;font-size:1.1rem;color:#0a84ff;padding:8px 12px;background:white;border-radius:6px;white-space:nowrap}
+    .todo-input{flex:1;padding:8px 12px;border:1px solid #e6e9ee;border-radius:6px;font-size:0.95rem}
+    .todo-input:focus{outline:none;border-color:#0a84ff}
+    .todo-list{display:flex;flex-direction:column;gap:8px}
+    .todo-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9fafb;border-radius:6px}
+    .todo-text{flex:1;font-size:0.95rem}
+    .delete-btn{background:#ff3b30;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.85rem}
+    .status{position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:10px 20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:1000;display:none}
+    .status.show{display:block}
+    .status.error{background:#ef4444}
+    .error-screen{display:none;text-align:center;padding:40px;max-width:500px;margin:100px auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+    .error-screen h2{color:#ff3b30;margin-bottom:20px}
+    .error-screen p{color:#666;margin-bottom:30px;line-height:1.6}
+    .error-screen a{display:inline-block;padding:12px 24px;background:#0a84ff;color:white;text-decoration:none;border-radius:6px;font-weight:600}
+    .error-screen a:hover{background:#0077ed}
+    .loading-screen{display:flex;justify-content:center;align-items:center;min-height:100vh;flex-direction:column;gap:20px}
+    .spinner{border:4px solid #f3f3f3;border-top:4px solid #0a84ff;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="login-container" id="loginContainer">
-        <div class="login-box">
-            <h1>Noah's Toolbox</h1>
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username">
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" placeholder="Enter password">
-                    <button type="button" class="show-password-btn" id="showPasswordBtn">👁️ Show</button>
-                </div>
-            </div>
-            <div class="remember-me">
-                <input type="checkbox" id="rememberMe">
-                <label for="rememberMe">Remember Me</label>
-            </div>
-            <button class="login-btn" id="loginBtn">Sign In</button>
-            <div class="error-message" id="errorMessage"></div>
-        </div>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Validating session...</p>
+  </div>
+
+  <div class="error-screen" id="errorScreen">
+    <h2>⚠️ Access Denied</h2>
+    <p id="errorMessage">Your session is invalid or has expired.</p>
+    <p>Please log in to access your toolbox.</p>
+    <a href="index.html">Go to Login Page</a>
+  </div>
+
+  <div id="mainContent" style="display:none">
+    <div class="status" id="status"></div>
+    
+    <div class="top-bar">
+      <div>
+        <h1 style="margin:0;font-size:1.4rem">Noah's Toolbox</h1>
+        <div class="user-display">User: <span id="currentUsername"></span></div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
     </div>
 
-    <div class="admin-container" id="adminContainer">
-        <div class="header">
-            <h1>Admin Panel</h1>
-            <div class="user-info">
-                <span id="adminUsername"></span>
-                <button class="logout-btn" id="adminLogoutBtn">Logout</button>
-            </div>
-        </div>
-        <div class="admin-content">
-            <div class="admin-section">
-                <h2>Existing Users</h2>
-                <div class="user-list" id="usersList"></div>
-            </div>
+    <div id="sections" class="grid"></div>
 
-            <div class="admin-section">
-                <h2>Add New User</h2>
-                <div class="form-group">
-                    <label for="newDisplayName">Employee Name</label>
-                    <input type="text" id="newDisplayName" placeholder="Enter full name (e.g., Noah Smith)">
-                </div>
-                <div class="form-group">
-                    <label for="newUsername">Username</label>
-                    <input type="text" id="newUsername" placeholder="Enter username (e.g., noah)">
-                </div>
-                <div class="form-group">
-                    <label for="newUserPassword">Password</label>
-                    <input type="password" id="newUserPassword" placeholder="Enter password">
-                </div>
-                <label style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <input type="checkbox" id="newIsAdmin" style="margin-right: 8px;">
-                    Make Admin
-                </label>
-                <button class="add-user-btn" id="addUserBtn">Add User</button>
-                <div class="error-message" id="addUserError"></div>
-                <div class="success-message" id="addUserSuccess"></div>
-            </div>
-
-            <div class="admin-section" style="text-align: center;">
-                <p style="margin-bottom: 15px;">Want to use the toolbox? Click below:</p>
-                <button class="toolbox-link" id="goToToolboxBtn">Go to Toolbox</button>
-            </div>
+    <div class="lists-grid">
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="0" placeholder="List Title" />
+          <span class="list-total-header" data-list="0"></span>
         </div>
+        <div class="todo-list" data-list="0"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="0" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="0">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="1" placeholder="List Title" />
+          <span class="list-total-header" data-list="1"></span>
+        </div>
+        <div class="todo-list" data-list="1"></div>
+        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="1" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="1">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="2" placeholder="List Title" />
+          <span class="list-total-header" data-list="2"></span>
+        </div>
+        <div class="todo-list" data-list="2"></div>
+        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="2" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="2">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="3" placeholder="List Title" />
+          <span class="list-total-header" data-list="3"></span>
+        </div>
+        <div class="todo-list" data-list="3"></div>
+        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="3" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="3">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="4" placeholder="List Title" />
+          <span class="list-total-header" data-list="4"></span>
+        </div>
+        <div class="todo-list" data-list="4"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="4" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="4">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="5" placeholder="List Title" />
+          <span class="list-total-header" data-list="5"></span>
+        </div>
+        <div class="todo-list" data-list="5"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="5" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="5">Add</button>
+        </div>
+      </div>
     </div>
 
-    <div id="changePasswordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Change Password</h2>
-                <button class="close-modal" id="closeModal">&times;</button>
-            </div>
-            <p style="margin-bottom: 20px;">Changing password for: <strong id="modalUsername"></strong></p>
-            <div class="form-group">
-                <label for="modalNewPassword">New Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="modalNewPassword" placeholder="Enter new password">
-                    <button type="button" class="show-password-btn" id="showModalPassword">👁️ Show</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="modalConfirmPassword">Confirm New Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="modalConfirmPassword" placeholder="Confirm new password">
-                    <button type="button" class="show-password-btn" id="showModalConfirm">👁️ Show</button>
-                </div>
-            </div>
-            <button class="add-user-btn" id="modalChangePasswordBtn">Change Password</button>
-            <div class="error-message" id="modalPasswordError"></div>
-            <div class="success-message" id="modalPasswordSuccess"></div>
-        </div>
+    <div class="card wide">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="exportBtn" class="btn small" style="flex:1;max-width:150px">Export CSV</button>
+        <button id="resetBtn" class="btn small secondary" style="flex:1;max-width:150px">Reset Today</button>
+        <div style="margin-left:auto">Date: <span id="dateLabel"></span></div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
+<script>
+(async () => {
+  const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
+
+  let supabase;
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (error) {
+    console.error('Supabase initialization error:', error);
+    showError('Failed to initialize application');
+    return;
+  }
+
+  // SESSION VALIDATION
+  async function validateSession(sessionToken) {
+    if (!sessionToken) return null;
+
+    const result = await supabase
+      .from('sessions')
+      .select('*, users(*)')
+      .eq('session_token', sessionToken)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (result.error || !result.data) {
+      return null;
+    }
+
+    return result.data.users;
+  }
+
+  async function deleteSession(sessionToken) {
+    if (!sessionToken) return;
+
+    await supabase
+      .from('sessions')
+      .delete()
+      .eq('session_token', sessionToken);
+
+    localStorage.removeItem('sessionToken');
+    sessionStorage.removeItem('sessionToken');
+  }
+
+  function showError(message) {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('errorScreen').style.display = 'block';
+    document.getElementById('errorMessage').textContent = message;
+  }
+
+  function showToolbox() {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('errorScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  }
+
+  // Get session token from storage
+  const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
+
+  if (!sessionToken) {
+    showError('No active session found. Please log in.');
+    return;
+  }
+
+  // Validate session
+  const user = await validateSession(sessionToken);
+  
+  if (!user) {
+    showError('Your session is invalid or has expired. Please log in again.');
+    localStorage.removeItem('sessionToken');
+    sessionStorage.removeItem('sessionToken');
+    return;
+  }
+
+  // Session is valid - proceed with toolbox
+  const USER_ID = user.username;
+  const USER_DISPLAY_NAME = user.display_name || user.username;
+
+  showToolbox();
+  document.getElementById('currentUsername').textContent = USER_DISPLAY_NAME;
+
+  // Logout button handler
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    if (confirm('Are you sure you want to logout?')) {
+      await deleteSession(sessionToken);
+      const path = window.location.pathname;
+      const directory = path.substring(0, path.lastIndexOf('/') + 1);
+      const loginUrl = window.location.origin + directory + 'index.html';
+      window.location.href = loginUrl;
+    }
+  });
+
+  // ORIGINAL TOOLBOX CODE BELOW
+  const NUM = 9;
+  const NUM_LISTS = 6;
+  const sectionsEl = document.getElementById('sections');
+  const exportBtn = document.getElementById('exportBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const dateLabel = document.getElementById('dateLabel');
+
+  const todayKey = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const formatDate = (d) => {
+    const date = new Date(d);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}-${day}-${year}`;
+  };
+  
+  dateLabel.textContent = formatDate(new Date());
+
+  const formatSecs = s => {
+    s = Math.max(0, Math.round(s));
+    const hours = Math.floor(s/3600);
+    const mins = Math.floor((s%3600)/60);
+    const secs = s%60;
+    if (hours>0) return `${hours}h ${String(mins).padStart(2,'0')}m`;
+    return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  };
+
+  const defaultNames = [
+    'Automations',
+    'Email/Text',
+    'Fixing Post-Bound Policy Issues',
+    'Follow Up',
+    'In-Bound Calls',
+    'Interviews',
+    'Loom Presentations',
+    'New Business',
+    'Requotes'
+  ];
+
+  const defaultListTitles = [
+    'Interviews Done',
+    'Loom Presentations',
+    'New Business Submission',
+    'New Business Premium',
+    'Requote Submission',
+    'Requote Premium'
+  ];
+
+  let names = [...defaultNames];
+  let totals = Array.from({length:NUM}, ()=>0);
+  let active = null;
+  let listTitles = [...defaultListTitles];
+  let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
+
+  function showStatus(message, type = 'saved') {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = message;
+    statusEl.className = `status show ${type === 'error' ? 'error' : ''}`;
+    setTimeout(() => {
+      statusEl.className = 'status';
+    }, 3000);
+  }
+
+  async function saveData() {
+    if (!supabase) return;
+    try {
+      const today = todayKey();
+      const { error } = await supabase
+        .from('work_data')
+        .upsert([{
+          user_id: USER_ID,
+          date: today,
+          names: JSON.stringify(names),
+          totals: JSON.stringify(totals),
+          active: JSON.stringify(active),
+          list_titles: JSON.stringify(listTitles),
+          list_items: JSON.stringify(listData.map(l => l.items))
+        }], {
+          onConflict: 'user_id,date'
+        });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        showStatus('Error saving', 'error');
+      } else {
+        showStatus('Saved ✓', 'saved');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+  }
+
+  async function loadData() {
+    if (!supabase) return;
+    try {
+      const today = todayKey();
+      const { data, error } = await supabase
+        .from('work_data')
+        .select('*')
+        .eq('user_id', USER_ID)
+        .eq('date', today)
+        .single();
+
+      if (error) {
+        if (error.code !== 'PGRST116') {
+          console.error('Error loading data:', error);
+        }
+        return;
+      }
+
+      if (data) {
+        names = JSON.parse(data.names || JSON.stringify(defaultNames));
+        totals = JSON.parse(data.totals || JSON.stringify(Array(NUM).fill(0)));
+        const loadedActive = JSON.parse(data.active || 'null');
         
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let currentUser = null;
-        let selectedUserForPasswordChange = null;
-
-        const SESSION_TOKEN_LENGTH = 64;
-        const SESSION_DURATION_DAYS = 30;
-
-        async function hashPassword(password) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        // If there's an active timer, keep it running with the original start time
+        if (loadedActive && loadedActive.index !== undefined && loadedActive.index !== -1 && loadedActive.start) {
+          active = loadedActive;
+        } else {
+          active = null;
         }
+        
+        listTitles = JSON.parse(data.list_titles || JSON.stringify(defaultListTitles));
+        const items = JSON.parse(data.list_items || '[]');
+        listData = items.map((itemList, i) => ({ items: itemList || [] }));
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
 
-        function generateSessionToken() {
-            const array = new Uint8Array(SESSION_TOKEN_LENGTH);
-            crypto.getRandomValues(array);
-            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  const elems = [];
+  function makeSection(i) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.contentEditable = true;
+    name.spellcheck = false;
+    name.textContent = names[i];
+    name.addEventListener('blur', () => {
+      names[i] = name.textContent.trim() || `Section ${i+1}`;
+      saveData();
+    });
+    name.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
+    });
+
+    const rightSide = document.createElement('div');
+    rightSide.className = 'meta';
+    
+    const total = document.createElement('div');
+    total.textContent = `Today: ${formatSecs(totals[i])}`;
+    
+    const running = document.createElement('div');
+    running.className = 'running';
+    running.textContent = `Current: 00:00`;
+    
+    rightSide.appendChild(total);
+    rightSide.appendChild(running);
+    
+    header.appendChild(name);
+    header.appendChild(rightSide);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn start';
+    btn.textContent = 'Start';
+    
+    card.appendChild(header);
+    card.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      if (active && active.index === i) {
+        stopActive();
+      } else {
+        startSection(i);
+      }
+    });
+
+    return {card, btn, running, total, name};
+  }
+
+  for (let i=0;i<NUM;i++){
+    const obj = makeSection(i);
+    elems.push(obj);
+    sectionsEl.appendChild(obj.card);
+  }
+
+  function refreshAll() {
+    for (let i=0;i<NUM;i++){
+      elems[i].name.textContent = names[i];
+      elems[i].total.textContent = `Today: ${formatSecs(totals[i])}`;
+      if (active && active.index === i) {
+        elems[i].btn.classList.remove('start'); elems[i].btn.classList.add('stop');
+        elems[i].btn.textContent = 'Stop';
+      } else {
+        elems[i].btn.classList.remove('stop'); elems[i].btn.classList.add('start');
+        elems[i].btn.textContent = 'Start';
+        elems[i].running.textContent = 'Current: 00:00';
+      }
+    }
+  }
+
+  function startSection(i) {
+    const now = Date.now();
+    if (active && active.index !== i) {
+      const delta = Math.round((now - active.start)/1000);
+      totals[active.index] = (totals[active.index]||0) + delta;
+    }
+    active = {index:i, start: now};
+    saveData();
+    refreshAll();
+  }
+
+  function stopActive() {
+    if (!active) return;
+    const now = Date.now();
+    const delta = Math.round((now - active.start)/1000);
+    totals[active.index] = (totals[active.index]||0) + delta;
+    active = null;
+    saveData();
+    refreshAll();
+  }
+
+  setInterval(()=> {
+    if (active) {
+      const now = Date.now();
+      const sec = Math.round((now - active.start)/1000);
+      elems[active.index].running.textContent = `Current: ${formatSecs(sec)}`;
+      elems[active.index].total.textContent = `Today: ${formatSecs(totals[active.index] + sec)}`;
+    }
+  }, 500);
+
+  const renderListItems = (index) => {
+    const todoListEl = document.querySelector(`.todo-list[data-list="${index}"]`);
+    const totalEl = document.querySelector(`.list-total-header[data-list="${index}"]`);
+    const hasTotals = index === 3 || index === 5;
+    
+    todoListEl.innerHTML = '';
+    let total = 0;
+    
+    listData[index].items.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'todo-item';
+      
+      const text = document.createElement('div');
+      text.className = 'todo-text';
+      text.textContent = item;
+      
+      if (hasTotals) {
+        const numValue = parseFloat(item.replace(/[^0-9.-]/g, ''));
+        if (!isNaN(numValue)) {
+          total += numValue;
         }
+      }
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => {
+        listData[index].items.splice(idx, 1);
+        saveData();
+        renderListItems(index);
+      });
+      
+      div.appendChild(text);
+      div.appendChild(deleteBtn);
+      todoListEl.appendChild(div);
+    });
+    
+    if (hasTotals && listData[index].items.length > 0) {
+      totalEl.textContent = `${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    } else if (listData[index].items.length > 0) {
+      totalEl.textContent = `${listData[index].items.length}`;
+    } else {
+      totalEl.textContent = '';
+    }
+  };
 
-        async function createSession(username, rememberMe) {
-            const sessionToken = generateSessionToken();
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + (rememberMe ? SESSION_DURATION_DAYS : 1));
+  for (let i = 0; i < NUM_LISTS; i++) {
+    const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+    const itemInput = document.querySelector(`.todo-input[data-list="${i}"]`);
+    const addBtn = document.querySelector(`.add-item-btn[data-list="${i}"]`);
 
-            const result = await supabaseClient.from('sessions').insert([{
-                session_token: sessionToken,
-                username: username,
-                expires_at: expiresAt.toISOString(),
-                created_at: new Date().toISOString()
-            }]);
+    titleInput.value = listTitles[i];
 
-            if (result.error) {
-                console.error('Error creating session:', result.error);
-                return null;
-            }
+    titleInput.addEventListener('input', () => {
+      listTitles[i] = titleInput.value;
+      saveData();
+    });
 
-            if (rememberMe) {
-                localStorage.setItem('sessionToken', sessionToken);
-            } else {
-                sessionStorage.setItem('sessionToken', sessionToken);
-            }
+    const addItem = () => {
+      const text = itemInput.value.trim();
+      if (!text) return;
+      listData[i].items.push(text);
+      itemInput.value = '';
+      saveData();
+      renderListItems(i);
+    };
 
-            return sessionToken;
-        }
+    addBtn.addEventListener('click', addItem);
+    itemInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addItem();
+    });
 
-        async function validateSession(sessionToken) {
-            if (!sessionToken) return null;
+    renderListItems(i);
+  }
 
-            const result = await supabaseClient
-                .from('sessions')
-                .select('*, users(*)')
-                .eq('session_token', sessionToken)
-                .gt('expires_at', new Date().toISOString())
-                .single();
-
-            if (result.error || !result.data) {
-                return null;
-            }
-
-            return result.data.users;
-        }
-
-        async function deleteSession(sessionToken) {
-            if (!sessionToken) return;
-
-            await supabaseClient
-                .from('sessions')
-                .delete()
-                .eq('session_token', sessionToken);
-
-            localStorage.removeItem('sessionToken');
-            sessionStorage.removeItem('sessionToken');
-        }
-
-        async function cleanupExpiredSessions() {
-            await supabaseClient
-                .from('sessions')
-                .delete()
-                .lt('expires_at', new Date().toISOString());
-        }
-
-        function getBaseUrl() {
-            const path = window.location.pathname;
-            const directory = path.substring(0, path.lastIndexOf('/') + 1);
-            return window.location.origin + directory;
-        }
-
-        document.getElementById('showPasswordBtn').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.textContent = '🙈 Hide';
-            } else {
-                passwordInput.type = 'password';
-                this.textContent = '👁️ Show';
-            }
+  exportBtn.addEventListener('click', () => {
+    let runningSecs = 0;
+    if (active) {
+      runningSecs = Math.round((Date.now() - active.start)/1000);
+    }
+    
+    const headers = ['Section', 'HH:MM:SS', ''];
+    listTitles.forEach(title => headers.push(title));
+    const rows = [headers];
+    
+    const maxItems = Math.max(...listData.map(l => l.items.length), 0);
+    const maxRows = Math.max(NUM, maxItems);
+    
+    for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
+      const row = [];
+      
+      if (rowIdx < NUM) {
+        const secs = totals[rowIdx] + (active && active.index===rowIdx ? runningSecs : 0);
+        const hh = Math.floor(secs/3600).toString().padStart(2,'0');
+        const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
+        const ss = (secs%60).toString().padStart(2,'0');
+        row.push(names[rowIdx].replace(/,/g,' '));
+        row.push(`${hh}:${mm}:${ss}`);
+      } else {
+        row.push('');
+        row.push('');
+      }
+      
+      row.push('');
+      
+      for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
+        const item = listData[listIdx].items[rowIdx];
+        row.push(item || '');
+      }
+      
+      rows.push(row);
+    }
+    
+    const totalRow = ['', '', ''];
+    for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
+      const hasTotals = listIdx === 3 || listIdx === 5;
+      
+      if (hasTotals) {
+        let sum = 0;
+        listData[listIdx].items.forEach(item => {
+          const numValue = parseFloat(item.replace(/[^0-9.-]/g, ''));
+          if (!isNaN(numValue)) {
+            sum += numValue;
+          }
         });
+        totalRow.push(sum.toFixed(2));
+      } else {
+        totalRow.push(listData[listIdx].items.length);
+      }
+    }
+    rows.push(totalRow);
+    
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${USER_ID}-work-totals-${todayKey()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 
-        document.getElementById('showModalPassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('modalNewPassword');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.textContent = '🙈 Hide';
-            } else {
-                passwordInput.type = 'password';
-                this.textContent = '👁️ Show';
-            }
-        });
+  resetBtn.addEventListener('click', () => {
+    if (!confirm('Clear today\'s time totals and to-do items? Section names and list titles will be kept.')) return;
+    totals = Array.from({length:NUM}, ()=>0);
+    active = null;
+    for (let i = 0; i < NUM_LISTS; i++) {
+      listData[i].items = [];
+      renderListItems(i);
+    }
+    saveData();
+    refreshAll();
+  });
 
-        document.getElementById('showModalConfirm').addEventListener('click', function() {
-            const passwordInput = document.getElementById('modalConfirmPassword');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.textContent = '🙈 Hide';
-            } else {
-                passwordInput.type = 'password';
-                this.textContent = '👁️ Show';
-            }
-        });
+  await loadData();
+  refreshAll();
+  for (let i = 0; i < NUM_LISTS; i++) {
+    const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+    titleInput.value = listTitles[i];
+    renderListItems(i);
+  }
 
-        document.getElementById('loginBtn').addEventListener('click', async function() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = '';
-
-            if (!username || !password) {
-                errorMessage.textContent = 'Please enter username and password';
-                return;
-            }
-
-            try {
-                const passwordHash = await hashPassword(password);
-                const result = await supabaseClient.from('users').select('*').eq('username', username);
-
-                if (result.error) {
-                    errorMessage.textContent = 'Database error: ' + result.error.message;
-                    return;
-                }
-
-                if (!result.data || result.data.length === 0) {
-                    errorMessage.textContent = 'Invalid username or password';
-                    return;
-                }
-
-                const user = result.data[0];
-
-                if (user.password_hash !== passwordHash) {
-                    errorMessage.textContent = 'Wrong password';
-                    return;
-                }
-
-                const sessionToken = await createSession(username, rememberMe);
-                if (!sessionToken) {
-                    errorMessage.textContent = 'Failed to create session';
-                    return;
-                }
-
-                currentUser = user;
-                
-                if (user.is_admin) {
-                    showAdminPanel();
-                } else {
-                    redirectToToolbox();
-                }
-            } catch (err) {
-                errorMessage.textContent = 'Login failed: ' + err.message;
-            }
-        });
-
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginBtn').click();
-            }
-        });
-
-        window.addEventListener('load', async function() {
-            await cleanupExpiredSessions();
-
-            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-            if (sessionToken) {
-                const user = await validateSession(sessionToken);
-                if (user) {
-                    currentUser = user;
-                    if (currentUser.is_admin) {
-                        showAdminPanel();
-                    } else {
-                        redirectToToolbox();
-                    }
-                } else {
-                    localStorage.removeItem('sessionToken');
-                    sessionStorage.removeItem('sessionToken');
-                }
-            }
-        });
-
-        function showAdminPanel() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('adminContainer').style.display = 'block';
-            const displayName = currentUser.display_name || currentUser.username;
-            document.getElementById('adminUsername').textContent = 'Admin: ' + displayName;
-            loadUsers();
-        }
-
-        function redirectToToolbox() {
-            window.location.href = getBaseUrl() + 'toolbox.html';
-        }
-
-        document.getElementById('goToToolboxBtn').addEventListener('click', function() {
-            redirectToToolbox();
-        });
-
-        document.getElementById('adminLogoutBtn').addEventListener('click', logout);
-
-        async function logout() {
-            const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
-            await deleteSession(sessionToken);
-            currentUser = null;
-            window.location.href = getBaseUrl() + 'index.html';
-        }
-
-        async function loadUsers() {
-            const result = await supabaseClient.from('users').select('*').order('display_name');
-            if (result.error) {
-                console.error('Error loading users:', result.error);
-                return;
-            }
-            const usersList = document.getElementById('usersList');
-            usersList.innerHTML = '';
-            if (result.data) {
-                result.data.forEach(function(user) {
-                    const div = document.createElement('div');
-                    div.className = 'user-item';
-                    const isCurrentUser = user.username === currentUser.username;
-                    const adminText = user.is_admin ? ' (Admin)' : '';
-                    const displayName = user.display_name || user.username;
-                    
-                    const span = document.createElement('span');
-                    span.textContent = displayName + ' (' + user.username + ')' + adminText;
-                    
-                    const actionsDiv = document.createElement('div');
-                    actionsDiv.className = 'user-actions';
-                    
-                    const changePasswordBtn = document.createElement('button');
-                    changePasswordBtn.className = 'change-password-btn';
-                    changePasswordBtn.textContent = 'Change Password';
-                    changePasswordBtn.onclick = function() { openChangePasswordModal(user.username, displayName); };
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-btn';
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.disabled = isCurrentUser;
-                    deleteBtn.onclick = function() { deleteUser(user.username); };
-                    
-                    actionsDiv.appendChild(changePasswordBtn);
-                    actionsDiv.appendChild(deleteBtn);
-                    
-                    div.appendChild(span);
-                    div.appendChild(actionsDiv);
-                    usersList.appendChild(div);
-                });
-            }
-        }
-
-        function openChangePasswordModal(username, displayName) {
-            selectedUserForPasswordChange = username;
-            document.getElementById('modalUsername').textContent = displayName || username;
-            document.getElementById('modalNewPassword').value = '';
-            document.getElementById('modalConfirmPassword').value = '';
-            document.getElementById('modalPasswordError').textContent = '';
-            document.getElementById('modalPasswordSuccess').textContent = '';
-            
-            document.getElementById('modalNewPassword').type = 'password';
-            document.getElementById('modalConfirmPassword').type = 'password';
-            document.getElementById('showModalPassword').textContent = '👁️ Show';
-            document.getElementById('showModalConfirm').textContent = '👁️ Show';
-            
-            document.getElementById('changePasswordModal').style.display = 'block';
-        }
-
-        document.getElementById('closeModal').addEventListener('click', function() {
-            document.getElementById('changePasswordModal').style.display = 'none';
-        });
-
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('changePasswordModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        document.getElementById('modalChangePasswordBtn').addEventListener('click', async function() {
-            const newPass = document.getElementById('modalNewPassword').value;
-            const confirm = document.getElementById('modalConfirmPassword').value;
-            const errorEl = document.getElementById('modalPasswordError');
-            const successEl = document.getElementById('modalPasswordSuccess');
-            
-            errorEl.textContent = '';
-            successEl.textContent = '';
-
-            if (!newPass || !confirm) {
-                errorEl.textContent = 'Please fill all fields';
-                return;
-            }
-
-            if (newPass !== confirm) {
-                errorEl.textContent = 'Passwords do not match';
-                return;
-            }
-
-            if (newPass.length < 4) {
-                errorEl.textContent = 'Password must be at least 4 characters';
-                return;
-            }
-
-            try {
-                const newHash = await hashPassword(newPass);
-                const result = await supabaseClient
-                    .from('users')
-                    .update({ password_hash: newHash })
-                    .eq('username', selectedUserForPasswordChange);
-
-                if (result.error) {
-                    errorEl.textContent = 'Error updating password: ' + result.error.message;
-                    return;
-                }
-
-                await supabaseClient
-                    .from('sessions')
-                    .delete()
-                    .eq('username', selectedUserForPasswordChange);
-
-                successEl.textContent = 'Password changed successfully!';
-                setTimeout(function() {
-                    document.getElementById('changePasswordModal').style.display = 'none';
-                }, 1500);
-            } catch (err) {
-                errorEl.textContent = 'Error: ' + err.message;
-            }
-        });
-
-        document.getElementById('addUserBtn').addEventListener('click', async function() {
-            const displayName = document.getElementById('newDisplayName').value.trim();
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newUserPassword').value;
-            const isAdmin = document.getElementById('newIsAdmin').checked;
-            const errorEl = document.getElementById('addUserError');
-            const successEl = document.getElementById('addUserSuccess');
-
-            errorEl.textContent = '';
-            successEl.textContent = '';
-
-            if (!displayName || !username || !password) {
-                errorEl.textContent = 'Please fill in all fields';
-                return;
-            }
-
-            try {
-                const passwordHash = await hashPassword(password);
-                const result = await supabaseClient.from('users').insert([{
-                    username: username,
-                    password_hash: passwordHash,
-                    is_admin: isAdmin,
-                    display_name: displayName
-                }]);
-
-                if (result.error) {
-                    errorEl.textContent = 'Error adding user: ' + result.error.message;
-                    return;
-                }
-
-                successEl.textContent = 'User added successfully!';
-                document.getElementById('newDisplayName').value = '';
-                document.getElementById('newUsername').value = '';
-                document.getElementById('newUserPassword').value = '';
-                document.getElementById('newIsAdmin').checked = false;
-                loadUsers();
-            } catch (err) {
-                errorEl.textContent = 'Error: ' + err.message;
-            }
-        });
-
-        async function deleteUser(username) {
-            if (!confirm('Delete user ' + username + '?')) return;
-            
-            await supabaseClient.from('sessions').delete().eq('username', username);
-            
-            const result = await supabaseClient.from('users').delete().eq('username', username);
-            if (result.error) {
-                alert('Error deleting user: ' + result.error.message);
-                return;
-            }
-            loadUsers();
-        }
-    </script>
+})();
+</script>
 </body>
 </html>
