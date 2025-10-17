@@ -219,7 +219,14 @@
         const record = data[0];
         if (record.names) names = record.names;
         if (record.totals) totals = record.totals;
-        if (record.active) active = record.active;
+        
+        // Handle active timer - add accumulated time if it exists
+        if (record.active && record.active.index !== undefined) {
+          const elapsed = Math.round((Date.now() - record.active.start) / 1000);
+          totals[record.active.index] = (totals[record.active.index] || 0) + elapsed;
+          active = null; // Don't resume the timer on page load
+        }
+        
         if (record.list_titles) {
           record.list_titles.forEach((title, i) => {
             if (listData[i]) listData[i].title = title;
@@ -386,14 +393,46 @@
     if (active) {
       runningSecs = Math.round((Date.now() - active.start)/1000);
     }
-    const rows = [['Section','Seconds','HH:MM:SS']];
+    
+    // Build header row with time sections and list titles
+    const headers = ['Section','Seconds','HH:MM:SS'];
+    listData.forEach(list => headers.push(list.title));
+    const rows = [headers];
+    
+    // Add time tracking data
     for (let i=0;i<NUM;i++){
       const secs = totals[i] + (active && active.index===i ? runningSecs : 0);
       const hh = Math.floor(secs/3600).toString().padStart(2,'0');
       const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
       const ss = (secs%60).toString().padStart(2,'0');
-      rows.push([names[i].replace(/,/g,' '), String(secs), `${hh}:${mm}:${ss}`]);
+      const row = [names[i].replace(/,/g,' '), String(secs), `${hh}:${mm}:${ss}`];
+      
+      // Add empty cells for list columns
+      for (let j = 0; j < NUM_LISTS; j++) {
+        row.push('');
+      }
+      
+      rows.push(row);
     }
+    
+    // Add empty row separator
+    const emptyRow = Array(3 + NUM_LISTS).fill('');
+    rows.push(emptyRow);
+    
+    // Add list data - find max items across all lists
+    const maxItems = Math.max(...listData.map(l => l.items.length), 0);
+    
+    for (let i = 0; i < maxItems; i++) {
+      const row = ['', '', ''];  // Empty cells for time section columns
+      
+      for (let j = 0; j < NUM_LISTS; j++) {
+        const item = listData[j].items[i] || '';
+        row.push(item);
+      }
+      
+      rows.push(row);
+    }
+    
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
