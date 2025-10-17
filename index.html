@@ -26,7 +26,7 @@
         .error-message { color: #ff3b30; font-size: 14px; margin-top: 10px; text-align: center; }
         .success-message { color: #10b981; font-size: 14px; margin-top: 10px; text-align: center; }
         
-        .admin-container, .toolbox-container { display: none; min-height: 100vh; background: white; }
+        .admin-container { display: none; min-height: 100vh; background: white; }
         .header { background: white; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
         .header h1 { color: #0a84ff; font-size: 24px; }
         .user-info { display: flex; align-items: center; gap: 15px; }
@@ -128,7 +128,7 @@
 
             <div class="admin-section" style="text-align: center;">
                 <p style="margin-bottom: 15px;">Want to use the toolbox? Click below:</p>
-                <a href="#" class="toolbox-link" id="goToToolboxBtn">Go to Toolbox</a>
+                <button class="toolbox-link" id="goToToolboxBtn">Go to Toolbox</button>
             </div>
         </div>
     </div>
@@ -145,7 +145,13 @@
             const data = encoder.encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function getBaseUrl() {
+            const path = window.location.pathname;
+            const directory = path.substring(0, path.lastIndexOf('/') + 1);
+            return window.location.origin + directory;
         }
 
         document.getElementById('showPasswordBtn').addEventListener('click', function() {
@@ -200,7 +206,7 @@
                 if (user.is_admin) {
                     showAdminPanel();
                 } else {
-                    openToolbox();
+                    redirectToToolbox();
                 }
             } catch (err) {
                 errorMessage.textContent = 'Login failed: ' + err.message;
@@ -220,7 +226,7 @@
                 if (currentUser.is_admin) {
                     showAdminPanel();
                 } else {
-                    openToolbox();
+                    redirectToToolbox();
                 }
             }
         });
@@ -232,15 +238,13 @@
             loadUsers();
         }
 
-        function openToolbox() {
-            const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '').replace('login.html', '');
-            const toolboxUrl = baseUrl + 'toolbox.html?user=' + encodeURIComponent(currentUser.username);
+        function redirectToToolbox() {
+            const toolboxUrl = getBaseUrl() + 'toolbox.html?user=' + encodeURIComponent(currentUser.username);
             window.location.href = toolboxUrl;
         }
 
-        document.getElementById('goToToolboxBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            openToolbox();
+        document.getElementById('goToToolboxBtn').addEventListener('click', function() {
+            redirectToToolbox();
         });
 
         document.getElementById('adminLogoutBtn').addEventListener('click', logout);
@@ -248,11 +252,9 @@
         function logout() {
             currentUser = null;
             localStorage.removeItem('rememberedUser');
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('adminContainer').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('errorMessage').textContent = '';
+            
+            const loginUrl = getBaseUrl() + 'index.html';
+            window.location.href = loginUrl;
         }
 
         document.getElementById('changePasswordBtn').addEventListener('click', async function() {
