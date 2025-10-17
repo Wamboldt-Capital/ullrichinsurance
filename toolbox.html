@@ -372,15 +372,11 @@
         totals = JSON.parse(data.totals || JSON.stringify(Array(NUM).fill(0)));
         const loadedActive = JSON.parse(data.active || 'null');
         
-        // If there's an active timer, calculate elapsed time and keep it running
+        // If there's an active timer, keep it running with the original start time
         if (loadedActive && loadedActive.index !== undefined && loadedActive.index !== -1 && loadedActive.start) {
-          const elapsed = Math.round((Date.now() - loadedActive.start) / 1000);
-          totals[loadedActive.index] = (totals[loadedActive.index] || 0) + elapsed;
-          // Keep the timer active with a new start time
-          active = { index: loadedActive.index, start: Date.now() };
-          await saveData();
-        } else {
           active = loadedActive;
+        } else {
+          active = null;
         }
         
         listTitles = JSON.parse(data.list_titles || JSON.stringify(defaultListTitles));
