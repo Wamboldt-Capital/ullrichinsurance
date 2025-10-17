@@ -383,7 +383,7 @@
         }
 
         async function loadUsers() {
-            const result = await supabaseClient.from('users').select('*').order('username');
+            const result = await supabaseClient.from('users').select('*').order('display_name');
             if (result.error) {
                 console.error('Error loading users:', result.error);
                 return;
