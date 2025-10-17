@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noah's Toolbox - Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -61,6 +60,7 @@
 
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
 
         label {
@@ -75,6 +75,7 @@
         input[type="password"] {
             width: 100%;
             padding: 12px;
+            padding-right: 45px;
             border: 2px solid #e0e0e0;
             border-radius: 5px;
             font-size: 14px;
@@ -84,7 +85,7 @@
         input[type="text"]:focus,
         input[type="password"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #007bff;
         }
 
         .checkbox-group {
@@ -106,19 +107,18 @@
         button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background 0.2s;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #0056b3;
         }
 
         button:active {
@@ -132,6 +132,7 @@
             border-radius: 5px;
             margin-bottom: 20px;
             font-size: 14px;
+            border: 1px solid #fcc;
         }
 
         .success {
@@ -145,6 +146,21 @@
 
         .hidden {
             display: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+            font-size: 14px;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: #007bff;
         }
 
         /* Main App Styles */
@@ -164,7 +180,7 @@
         }
 
         .username {
-            color: #667eea;
+            color: #007bff;
             font-weight: 600;
         }
 
@@ -206,7 +222,7 @@
         .timer {
             font-size: 32px;
             font-weight: bold;
-            color: #667eea;
+            color: #007bff;
             margin: 15px 0;
             font-family: 'Courier New', monospace;
         }
@@ -374,6 +390,7 @@
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" required>
+                <span class="password-toggle" onclick="togglePassword()">👁️ Show</span>
             </div>
             
             <div class="checkbox-group">
@@ -574,18 +591,36 @@
             1: [], 2: [], 3: [], 4: [], 5: [], 6: []
         };
 
-        // Password Hashing
-        function hashPassword(password) {
-            return CryptoJS.SHA256(password).toString();
+        // Password Hashing using Web Crypto API
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Password Toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈 Hide';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️ Show';
+            }
         }
 
         // Check for remembered user
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             const rememberedUser = localStorage.getItem('rememberedUser');
             const rememberedHash = localStorage.getItem('rememberedHash');
             
             if (rememberedUser && rememberedHash) {
-                autoLogin(rememberedUser, rememberedHash);
+                await autoLogin(rememberedUser, rememberedHash);
             }
         });
 
@@ -616,9 +651,27 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
-            const passwordHash = hashPassword(password);
+            const passwordHash = await hashPassword(password);
+
+            console.log('Attempting login for:', username);
+            console.log('Password hash:', passwordHash);
 
             try {
+                // First check if username exists
+                const { data: userCheck, error: checkError } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+
+                // If username doesn't exist
+                if (checkError || !userCheck) {
+                    console.error('Username not found:', checkError);
+                    showError('Invalid username or password');
+                    return;
+                }
+
+                // Username exists, now check password
                 const { data, error } = await supabase
                     .from('users')
                     .select('*')
@@ -626,8 +679,12 @@
                     .eq('password_hash', passwordHash)
                     .single();
 
+                console.log('Supabase response:', { data, error });
+
                 if (error || !data) {
-                    showError('Invalid username or password');
+                    console.error('Login error:', error);
+                    // Username exists but password is wrong
+                    showError('Wrong password');
                     return;
                 }
 
@@ -641,6 +698,7 @@
                 showApp();
                 await loadData();
             } catch (err) {
+                console.error('Login exception:', err);
                 showError('Login failed. Please try again.');
             }
         });
@@ -709,7 +767,7 @@
                 return;
             }
 
-            const passwordHash = hashPassword(password);
+            const passwordHash = await hashPassword(password);
 
             try {
                 const { data, error } = await supabase
@@ -782,7 +840,7 @@
                 return;
             }
 
-            const passwordHash = hashPassword(newPassword);
+            const passwordHash = await hashPassword(newPassword);
 
             try {
                 const { error } = await supabase
