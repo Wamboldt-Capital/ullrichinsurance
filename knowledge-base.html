@@ -148,7 +148,7 @@
         
         .search-section {
             background: white;
-            padding: 20px;
+            padding: 15px 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
@@ -206,23 +206,6 @@
             color: #666;
         }
         
-        .article-actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .icon-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 5px 10px;
-            color: #666;
-        }
-        
-        .icon-btn:hover { color: #0a84ff; }
-        .icon-btn.delete:hover { color: #ff3b30; }
-        
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -237,19 +220,17 @@
         /* Article View */
         .article-view {
             display: none;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 40px;
         }
         
         .article-view-header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e5e7eb;
         }
         
         .article-view-title {
@@ -264,17 +245,16 @@
             gap: 10px;
         }
         
-        .article-view-content {
-            font-size: 16px;
-            line-height: 1.8;
-            color: #333;
-            white-space: pre-wrap;
-            padding-bottom: 30px;
+        .current-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
         
-        .current-section {
-            margin-bottom: 30px;
-            padding: 30px;
+        .current-inner {
+            padding: 25px;
             background: #ecfdf5;
             border-radius: 8px;
             border: 2px solid #10b981;
@@ -306,15 +286,21 @@
         }
         
         .current-content {
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.8;
             color: #064e3b;
             white-space: pre-wrap;
         }
         
         .archive-section {
-            margin-top: 20px;
+            background: white;
             padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .archive-inner {
+            padding: 25px;
             background: #fffbeb;
             border-radius: 8px;
             border: 2px solid #fbbf24;
@@ -355,7 +341,6 @@
         .archive-empty {
             color: #a16207;
             font-style: italic;
-            padding: 20px;
             text-align: center;
             font-size: 14px;
         }
@@ -427,8 +412,12 @@
         }
         
         .form-group textarea {
-            min-height: 400px;
+            min-height: 300px;
             resize: vertical;
+        }
+        
+        .form-group textarea.short {
+            min-height: 200px;
         }
         
         .form-group input:focus,
@@ -509,14 +498,25 @@
                     <button class="btn danger" id="deleteArticleBtn">Delete</button>
                 </div>
             </div>
-            <div class="article-view-content" id="viewArticleContent"></div>
+            
+            <div class="current-section">
+                <div class="current-inner">
+                    <div class="current-header">
+                        <div class="current-title">✅ Current Information</div>
+                        <div class="current-badge">UP TO DATE</div>
+                    </div>
+                    <div class="current-content" id="viewArticleContent"></div>
+                </div>
+            </div>
             
             <div class="archive-section">
-                <div class="archive-header">
-                    <div class="archive-title">📦 Archive</div>
-                    <div class="archive-badge">OLD INFO</div>
+                <div class="archive-inner">
+                    <div class="archive-header">
+                        <div class="archive-title">📦 Archive</div>
+                        <div class="archive-badge">OLD INFO</div>
+                    </div>
+                    <div class="archive-content" id="viewArticleArchive"></div>
                 </div>
-                <div class="archive-content" id="viewArticleArchive"></div>
             </div>
         </div>
     </div>
@@ -533,12 +533,12 @@
                 <input type="text" id="articleTitleInput" placeholder="Enter article title">
             </div>
             <div class="form-group">
-                <label for="articleContentInput">Content</label>
-                <textarea id="articleContentInput" placeholder="Enter article content..."></textarea>
+                <label for="articleContentInput">Current Information (Up to Date)</label>
+                <textarea id="articleContentInput" placeholder="Enter current, up-to-date information..."></textarea>
             </div>
             <div class="form-group">
                 <label for="articleArchiveInput">Archive (Old/Outdated Information)</label>
-                <textarea id="articleArchiveInput" placeholder="Enter old or outdated information here..." style="min-height: 200px;"></textarea>
+                <textarea id="articleArchiveInput" class="short" placeholder="Enter old or outdated information here..."></textarea>
             </div>
             <div class="modal-actions">
                 <button class="btn secondary" id="cancelArticleBtn">Cancel</button>
@@ -688,16 +688,13 @@
                 document.getElementById('viewArticleContent').textContent = article.content;
                 
                 const archiveEl = document.getElementById('viewArticleArchive');
-                const archiveSection = document.querySelector('.archive-section');
                 
                 if (article.archive && article.archive.trim()) {
                     archiveEl.textContent = article.archive;
                     archiveEl.className = 'archive-content';
-                    archiveSection.style.display = 'block';
                 } else {
                     archiveEl.textContent = 'No archived information yet';
                     archiveEl.className = 'archive-empty';
-                    archiveSection.style.display = 'block';
                 }
 
                 document.getElementById('listView').style.display = 'none';
