@@ -255,7 +255,7 @@
             document.getElementById('toolboxContainer').style.display = 'block';
             document.getElementById('toolboxUsername').textContent = currentUser.username;
             
-            const toolboxURL = 'https://noah-toolbox.html?user=' + encodeURIComponent(currentUser.username);
+            const toolboxURL = 'toolbox.html?user=' + encodeURIComponent(currentUser.username);
             document.getElementById('toolboxURL').textContent = toolboxURL;
         }
 
@@ -265,8 +265,7 @@
         });
 
         document.getElementById('openToolboxBtn').addEventListener('click', function() {
-            window.open('https://nggpymtnuuxfvgcuzemd.supabase.co', '_blank');
-            alert('Please save the HTML file from the conversation and open it with ?user=' + currentUser.username);
+            window.open('toolbox.html?user=' + encodeURIComponent(currentUser.username), '_blank');
         });
 
         document.getElementById('adminLogoutBtn').addEventListener('click', logout);
