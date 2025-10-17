@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f5f5;
             min-height: 100vh;
             display: flex;
@@ -25,7 +25,7 @@
         .container {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             max-width: 400px;
             width: 100%;
             padding: 40px;
@@ -37,7 +37,7 @@
             background: white;
             border-radius: 10px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         h1 {
@@ -88,6 +88,21 @@
             border-color: #007bff;
         }
 
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+            font-size: 14px;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: #007bff;
+        }
+
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -121,10 +136,6 @@
             background: #0056b3;
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
         .error {
             background: #fee;
             color: #c33;
@@ -148,22 +159,6 @@
             display: none;
         }
 
-        .password-toggle {
-            position: absolute;
-            right: 12px;
-            top: 38px;
-            cursor: pointer;
-            color: #666;
-            user-select: none;
-            font-size: 14px;
-            padding: 5px;
-        }
-
-        .password-toggle:hover {
-            color: #007bff;
-        }
-
-        /* Main App Styles */
         .header {
             display: flex;
             justify-content: space-between;
@@ -184,18 +179,18 @@
             font-weight: 600;
         }
 
-        .logout-btn {
+        .logout-btn, .admin-btn {
             width: auto;
             padding: 8px 20px;
-            background: #dc3545;
             font-size: 14px;
         }
 
+        .logout-btn {
+            background: #dc3545;
+        }
+
         .admin-btn {
-            width: auto;
-            padding: 8px 20px;
             background: #28a745;
-            font-size: 14px;
             margin-right: 10px;
         }
 
@@ -308,7 +303,6 @@
             padding: 12px 40px;
         }
 
-        /* Admin Panel Styles */
         .admin-panel {
             margin-top: 30px;
             padding-top: 30px;
@@ -374,7 +368,6 @@
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
     <div id="loginScreen" class="container">
         <h1>Noah's Toolbox</h1>
         <p class="subtitle">Sign in to continue</p>
@@ -402,7 +395,6 @@
         </form>
     </div>
 
-    <!-- Main App Screen -->
     <div id="appScreen" class="app-container hidden">
         <div class="header">
             <h1>Noah's Toolbox</h1>
@@ -444,7 +436,7 @@
                     <div class="controls">
                         <button class="start-btn" onclick="startTimer(3)">Start</button>
                         <button class="stop-btn" onclick="stopTimer(3)">Stop</button>
-                        <button class="reset-btn" onclick="resetTimer(3)">Reset</button>
+                        <button class="reset-btn" onclick="startTimer(3)">Reset</button>
                     </div>
                 </div>
 
@@ -543,7 +535,6 @@
             </div>
         </div>
 
-        <!-- Admin Panel -->
         <div id="adminPanel" class="admin-panel hidden">
             <h2>User Management</h2>
             
@@ -572,12 +563,10 @@
     </div>
 
     <script>
-        // Supabase Configuration
         const SUPABASE_URL = 'https://ekcpjqzgmnmtufdjqmdk.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrY3BqcXpnbW5tdHVmZGpxbWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3NDg4MjMsImV4cCI6MjA1MDMyNDgyM30.2XMcEJVHmQzuuRIv8NfgQ3DWZjmBqNUtxz2Cj6vJCEM';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // State
         let currentUser = null;
         let timers = {
             1: { active: false, seconds: 0, interval: null, totalSeconds: 0 },
@@ -587,11 +576,8 @@
             5: { active: false, seconds: 0, interval: null, totalSeconds: 0 },
             6: { active: false, seconds: 0, interval: null, totalSeconds: 0 }
         };
-        let lists = {
-            1: [], 2: [], 3: [], 4: [], 5: [], 6: []
-        };
+        let lists = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
 
-        // Password Hashing using Web Crypto API
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -600,7 +586,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Password Toggle
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleBtn = document.querySelector('.password-toggle');
@@ -614,7 +599,6 @@
             }
         }
 
-        // Check for remembered user
         window.addEventListener('load', async () => {
             const rememberedUser = localStorage.getItem('rememberedUser');
             const rememberedHash = localStorage.getItem('rememberedHash');
@@ -624,7 +608,6 @@
             }
         });
 
-        // Auto login
         async function autoLogin(username, passwordHash) {
             try {
                 const { data, error } = await supabase
@@ -644,7 +627,6 @@
             }
         }
 
-        // Login Form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -654,24 +636,19 @@
             const passwordHash = await hashPassword(password);
 
             console.log('Attempting login for:', username);
-            console.log('Password hash:', passwordHash);
 
             try {
-                // First check if username exists
                 const { data: userCheck, error: checkError } = await supabase
                     .from('users')
                     .select('username')
                     .eq('username', username)
                     .single();
 
-                // If username doesn't exist
                 if (checkError || !userCheck) {
-                    console.error('Username not found:', checkError);
                     showError('Invalid username or password');
                     return;
                 }
 
-                // Username exists, now check password
                 const { data, error } = await supabase
                     .from('users')
                     .select('*')
@@ -679,11 +656,7 @@
                     .eq('password_hash', passwordHash)
                     .single();
 
-                console.log('Supabase response:', { data, error });
-
                 if (error || !data) {
-                    console.error('Login error:', error);
-                    // Username exists but password is wrong
                     showError('Wrong password');
                     return;
                 }
@@ -720,13 +693,11 @@
             }
         }
 
-        // Logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('rememberedUser');
             localStorage.removeItem('rememberedHash');
             currentUser = null;
             
-            // Stop all timers
             for (let i = 1; i <= 6; i++) {
                 if (timers[i].active) stopTimer(i);
             }
@@ -736,7 +707,6 @@
             document.getElementById('loginForm').reset();
         });
 
-        // Admin Panel Toggle
         document.getElementById('adminPanelBtn').addEventListener('click', async () => {
             const panel = document.getElementById('adminPanel');
             const mainApp = document.getElementById('mainApp');
@@ -751,7 +721,6 @@
             }
         });
 
-        // Create User
         async function createUser() {
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
@@ -770,7 +739,7 @@
             const passwordHash = await hashPassword(password);
 
             try {
-                const { data, error } = await supabase
+                const { error } = await supabase
                     .from('users')
                     .insert([{
                         username: username,
@@ -797,7 +766,6 @@
             }
         }
 
-        // Load Users
         async function loadUsers() {
             try {
                 const { data, error } = await supabase
@@ -830,7 +798,6 @@
             }
         }
 
-        // Change Password
         async function changePassword(username) {
             const newPassword = prompt(`Enter new password for ${username}:`);
             if (!newPassword) return;
@@ -856,24 +823,12 @@
             }
         }
 
-        // Delete User
         async function deleteUser(username) {
-            if (!confirm(`Are you sure you want to delete user "${username}"? This will also delete all their data.`)) {
-                return;
-            }
+            if (!confirm(`Delete user "${username}" and all their data?`)) return;
 
             try {
-                // Delete user's work data first
-                await supabase
-                    .from('work_data')
-                    .delete()
-                    .eq('user_id', username);
-
-                // Delete user
-                const { error } = await supabase
-                    .from('users')
-                    .delete()
-                    .eq('username', username);
+                await supabase.from('work_data').delete().eq('user_id', username);
+                const { error } = await supabase.from('users').delete().eq('username', username);
 
                 if (error) throw error;
 
@@ -898,7 +853,6 @@
             setTimeout(() => successDiv.classList.add('hidden'), 3000);
         }
 
-        // Timer Functions
         function startTimer(num) {
             if (timers[num].active) return;
             
@@ -938,7 +892,6 @@
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
-        // List Functions
         function addToList(num) {
             const input = document.getElementById(`list${num}Input`);
             const value = input.value.trim();
@@ -952,33 +905,4 @@
         }
 
         function removeFromList(num, index) {
-            lists[num].splice(index, 1);
-            renderList(num);
-            saveData();
-        }
-
-        function renderList(num) {
-            const container = document.getElementById(`list${num}`);
-            container.innerHTML = '';
-            
-            lists[num].forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
-                    <span>${item}</span>
-                    <button onclick="removeFromList(${num}, ${index})">Delete</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Save Data to Supabase
-        async function saveData() {
-            if (!currentUser) return;
-
-            const today = new Date().toISOString().split('T')[0];
-            
-            const dataToSave = {
-                user_id: currentUser.username,
-                date: today,
-                timer1
+            lists[num].splice(index,
