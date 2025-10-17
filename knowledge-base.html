@@ -62,7 +62,7 @@
         
         .container {
             display: none;
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -106,18 +106,22 @@
         .btn.secondary:hover { background: #5a6268; }
         .btn.success { background: #10b981; }
         .btn.success:hover { background: #059669; }
+        .btn.danger { background: #ff3b30; }
+        .btn.danger:hover { background: #d32f2f; }
         
-        .search-bar {
+        .search-section {
             background: white;
-            padding: 15px 20px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
         }
         
         .search-input {
-            width: 100%;
-            padding: 10px 15px;
+            flex: 1;
+            padding: 12px 15px;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
@@ -128,36 +132,44 @@
             border-color: #0a84ff;
         }
         
-        .categories {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .category {
+        .articles-list {
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
+            overflow: hidden;
         }
         
-        .category-header {
+        .article-item {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #0a84ff;
+            transition: background 0.2s;
         }
         
-        .category-title {
+        .article-item:hover {
+            background: #f9fafb;
+        }
+        
+        .article-item:last-child {
+            border-bottom: none;
+        }
+        
+        .article-title {
             font-size: 18px;
             font-weight: 600;
-            color: #0a84ff;
+            color: #333;
+            margin-bottom: 5px;
         }
         
-        .category-actions {
+        .article-date {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .article-actions {
             display: flex;
             gap: 5px;
         }
@@ -167,88 +179,62 @@
             border: none;
             cursor: pointer;
             font-size: 18px;
-            padding: 5px;
+            padding: 5px 10px;
             color: #666;
         }
         
         .icon-btn:hover { color: #0a84ff; }
         .icon-btn.delete:hover { color: #ff3b30; }
         
-        .articles {
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        /* Article View */
+        .article-view {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        .article-view-header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .article-view-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0a84ff;
+            flex: 1;
+        }
+        
+        .article-view-actions {
+            display: flex;
             gap: 10px;
         }
         
-        .article {
-            padding: 10px;
-            background: #f9fafb;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .article:hover { background: #e5e7eb; }
-        
-        .article-title {
-            font-weight: 500;
+        .article-view-content {
+            font-size: 16px;
+            line-height: 1.8;
             color: #333;
-            margin-bottom: 5px;
+            white-space: pre-wrap;
         }
         
-        .article-preview {
-            font-size: 14px;
-            color: #666;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .add-article-btn {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background: #f3f4f6;
-            border: 2px dashed #d1d5db;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .add-article-btn:hover {
-            background: #e5e7eb;
-            border-color: #0a84ff;
-            color: #0a84ff;
-        }
-        
-        .add-category-card {
-            background: white;
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .add-category-card:hover {
-            border-color: #0a84ff;
-            background: #f9fafb;
-        }
-        
-        .add-category-text {
-            font-size: 18px;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .add-category-card:hover .add-category-text {
-            color: #0a84ff;
-        }
-        
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -315,7 +301,7 @@
         }
         
         .form-group textarea {
-            min-height: 300px;
+            min-height: 400px;
             resize: vertical;
         }
         
@@ -346,17 +332,6 @@
         
         .status.show { display: block; }
         .status.error { background: #ef4444; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-        
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
     </style>
 </head>
 <body>
@@ -386,28 +361,25 @@
             </div>
         </div>
 
-        <div class="search-bar">
-            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search articles...">
+        <div id="listView">
+            <div class="search-section">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search articles...">
+                <button class="btn success" id="newArticleBtn">+ New Article</button>
+            </div>
+
+            <div class="articles-list" id="articlesList"></div>
         </div>
 
-        <div class="categories" id="categoriesContainer"></div>
-    </div>
-
-    <!-- Category Modal -->
-    <div id="categoryModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="categoryModalTitle">New Category</h2>
-                <button class="close-modal" id="closeCategoryModal">&times;</button>
+        <div class="article-view" id="articleView">
+            <div class="article-view-header">
+                <h1 class="article-view-title" id="viewArticleTitle"></h1>
+                <div class="article-view-actions">
+                    <button class="btn secondary" id="backToListBtn">← Back</button>
+                    <button class="btn" id="editArticleBtn">Edit</button>
+                    <button class="btn danger" id="deleteArticleBtn">Delete</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="categoryNameInput">Category Name</label>
-                <input type="text" id="categoryNameInput" placeholder="e.g., Policy Guidelines, Claims Process">
-            </div>
-            <div class="modal-actions">
-                <button class="btn secondary" id="cancelCategoryBtn">Cancel</button>
-                <button class="btn success" id="saveCategoryBtn">Save Category</button>
-            </div>
+            <div class="article-view-content" id="viewArticleContent"></div>
         </div>
     </div>
 
@@ -427,7 +399,6 @@
                 <textarea id="articleContentInput" placeholder="Enter article content..."></textarea>
             </div>
             <div class="modal-actions">
-                <button class="btn secondary" id="deleteArticleBtn" style="margin-right: auto; display: none;">Delete Article</button>
                 <button class="btn secondary" id="cancelArticleBtn">Cancel</button>
                 <button class="btn success" id="saveArticleBtn">Save Article</button>
             </div>
@@ -495,10 +466,8 @@
             });
 
             // Knowledge base logic
-            let categories = [];
-            let currentCategoryId = null;
+            let articles = [];
             let currentArticleId = null;
-            let editingCategoryId = null;
 
             function showStatus(message, type = 'success') {
                 const statusEl = document.getElementById('status');
@@ -507,211 +476,96 @@
                 setTimeout(() => statusEl.className = 'status', 3000);
             }
 
-            async function loadKnowledgeBase() {
+            async function loadArticles() {
                 const { data, error } = await supabase
-                    .from('knowledge_base')
+                    .from('kb_articles')
                     .select('*')
-                    .order('category_order');
+                    .order('title');
 
                 if (error && error.code !== 'PGRST116') {
-                    console.error('Error loading knowledge base:', error);
-                    showStatus('Error loading knowledge base', 'error');
+                    console.error('Error loading articles:', error);
+                    showStatus('Error loading articles', 'error');
                     return;
                 }
 
-                categories = data || [];
-                renderCategories();
+                articles = data || [];
+                renderArticles();
             }
 
-            function renderCategories(searchTerm = '') {
-                const container = document.getElementById('categoriesContainer');
+            function renderArticles(searchTerm = '') {
+                const container = document.getElementById('articlesList');
                 container.innerHTML = '';
 
-                const filteredCategories = categories.map(cat => {
-                    const filteredArticles = cat.articles.filter(article => {
-                        if (!searchTerm) return true;
-                        const search = searchTerm.toLowerCase();
-                        return article.title.toLowerCase().includes(search) || 
-                               article.content.toLowerCase().includes(search);
-                    });
-                    return { ...cat, filteredArticles };
-                }).filter(cat => searchTerm === '' || cat.filteredArticles.length > 0);
-
-                if (filteredCategories.length === 0 && categories.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1 / -1;">
-                            <h3>No categories yet</h3>
-                            <p>Click the button below to create your first category</p>
-                        </div>
-                    `;
+                let filteredArticles = articles;
+                if (searchTerm) {
+                    const search = searchTerm.toLowerCase();
+                    filteredArticles = articles.filter(article => 
+                        article.title.toLowerCase().includes(search) || 
+                        article.content.toLowerCase().includes(search)
+                    );
                 }
 
-                filteredCategories.forEach(category => {
-                    const categoryEl = document.createElement('div');
-                    categoryEl.className = 'category';
-                    
-                    const articlesToShow = searchTerm ? category.filteredArticles : category.articles;
-                    
-                    categoryEl.innerHTML = `
-                        <div class="category-header">
-                            <div class="category-title">${category.category_name}</div>
-                            <div class="category-actions">
-                                <button class="icon-btn edit-category" data-id="${category.id}">✏️</button>
-                                <button class="icon-btn delete delete-category" data-id="${category.id}">🗑️</button>
-                            </div>
+                if (filteredArticles.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>${searchTerm ? 'No articles found' : 'No articles yet'}</h3>
+                            <p>${searchTerm ? 'Try a different search term' : 'Click "New Article" to create your first article'}</p>
                         </div>
-                        <div class="articles">
-                            ${articlesToShow.map(article => `
-                                <div class="article" data-category-id="${category.id}" data-article-id="${article.id}">
-                                    <div class="article-title">${article.title}</div>
-                                    <div class="article-preview">${article.content.substring(0, 100)}...</div>
-                                </div>
-                            `).join('')}
+                    `;
+                    return;
+                }
+
+                filteredArticles.forEach(article => {
+                    const articleEl = document.createElement('div');
+                    articleEl.className = 'article-item';
+                    
+                    const date = new Date(article.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    articleEl.innerHTML = `
+                        <div>
+                            <div class="article-title">${article.title}</div>
+                            <div class="article-date">Created: ${date}</div>
                         </div>
-                        <button class="add-article-btn" data-category-id="${category.id}">+ Add Article</button>
                     `;
                     
-                    container.appendChild(categoryEl);
-                });
-
-                // Add "Add Category" card
-                const addCategoryCard = document.createElement('div');
-                addCategoryCard.className = 'add-category-card';
-                addCategoryCard.innerHTML = '<div class="add-category-text">+ Add Category</div>';
-                addCategoryCard.addEventListener('click', () => openCategoryModal());
-                container.appendChild(addCategoryCard);
-
-                // Event listeners
-                document.querySelectorAll('.edit-category').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const categoryId = btn.dataset.id;
-                        const category = categories.find(c => c.id === categoryId);
-                        openCategoryModal(category);
-                    });
-                });
-
-                document.querySelectorAll('.delete-category').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        const categoryId = btn.dataset.id;
-                        const category = categories.find(c => c.id === categoryId);
-                        if (confirm(`Delete category "${category.category_name}" and all its articles?`)) {
-                            await deleteCategory(categoryId);
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.add-article-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        currentCategoryId = btn.dataset.categoryId;
-                        openArticleModal();
-                    });
-                });
-
-                document.querySelectorAll('.article').forEach(article => {
-                    article.addEventListener('click', () => {
-                        const categoryId = article.dataset.categoryId;
-                        const articleId = article.dataset.articleId;
-                        const category = categories.find(c => c.id === categoryId);
-                        const articleData = category.articles.find(a => a.id === articleId);
-                        openArticleModal(categoryId, articleData);
-                    });
+                    articleEl.addEventListener('click', () => showArticle(article.id));
+                    container.appendChild(articleEl);
                 });
             }
 
-            function openCategoryModal(category = null) {
-                editingCategoryId = category ? category.id : null;
-                document.getElementById('categoryModalTitle').textContent = category ? 'Edit Category' : 'New Category';
-                document.getElementById('categoryNameInput').value = category ? category.category_name : '';
-                document.getElementById('categoryModal').style.display = 'block';
+            function showArticle(articleId) {
+                const article = articles.find(a => a.id === articleId);
+                if (!article) return;
+
+                currentArticleId = articleId;
+                document.getElementById('viewArticleTitle').textContent = article.title;
+                document.getElementById('viewArticleContent').textContent = article.content;
+
+                document.getElementById('listView').style.display = 'none';
+                document.getElementById('articleView').style.display = 'block';
             }
 
-            function closeCategoryModal() {
-                document.getElementById('categoryModal').style.display = 'none';
-                editingCategoryId = null;
+            function showList() {
+                document.getElementById('listView').style.display = 'block';
+                document.getElementById('articleView').style.display = 'none';
+                currentArticleId = null;
             }
 
-            function openArticleModal(categoryId = null, article = null) {
-                currentCategoryId = categoryId || currentCategoryId;
+            function openArticleModal(article = null) {
                 currentArticleId = article ? article.id : null;
-                
                 document.getElementById('articleModalTitle').textContent = article ? 'Edit Article' : 'New Article';
                 document.getElementById('articleTitleInput').value = article ? article.title : '';
                 document.getElementById('articleContentInput').value = article ? article.content : '';
-                document.getElementById('deleteArticleBtn').style.display = article ? 'block' : 'none';
                 document.getElementById('articleModal').style.display = 'block';
             }
 
             function closeArticleModal() {
                 document.getElementById('articleModal').style.display = 'none';
-                currentCategoryId = null;
                 currentArticleId = null;
-            }
-
-            async function saveCategory() {
-                const name = document.getElementById('categoryNameInput').value.trim();
-                if (!name) {
-                    showStatus('Please enter a category name', 'error');
-                    return;
-                }
-
-                if (editingCategoryId) {
-                    // Update existing category
-                    const category = categories.find(c => c.id === editingCategoryId);
-                    category.category_name = name;
-                    
-                    const { error } = await supabase
-                        .from('knowledge_base')
-                        .update({ category_name: name })
-                        .eq('id', editingCategoryId);
-
-                    if (error) {
-                        showStatus('Error updating category', 'error');
-                        return;
-                    }
-                    showStatus('Category updated!');
-                } else {
-                    // Create new category
-                    const newCategory = {
-                        category_name: name,
-                        articles: [],
-                        category_order: categories.length
-                    };
-
-                    const { data, error } = await supabase
-                        .from('knowledge_base')
-                        .insert([newCategory])
-                        .select()
-                        .single();
-
-                    if (error) {
-                        showStatus('Error creating category', 'error');
-                        return;
-                    }
-                    
-                    categories.push(data);
-                    showStatus('Category created!');
-                }
-
-                closeCategoryModal();
-                renderCategories();
-            }
-
-            async function deleteCategory(categoryId) {
-                const { error } = await supabase
-                    .from('knowledge_base')
-                    .delete()
-                    .eq('id', categoryId);
-
-                if (error) {
-                    showStatus('Error deleting category', 'error');
-                    return;
-                }
-
-                categories = categories.filter(c => c.id !== categoryId);
-                showStatus('Category deleted');
-                renderCategories();
             }
 
             async function saveArticle() {
@@ -723,82 +577,89 @@
                     return;
                 }
 
-                const category = categories.find(c => c.id === currentCategoryId);
-                
                 if (currentArticleId) {
                     // Update existing article
-                    const article = category.articles.find(a => a.id === currentArticleId);
+                    const { error } = await supabase
+                        .from('kb_articles')
+                        .update({ title, content, updated_at: new Date().toISOString() })
+                        .eq('id', currentArticleId);
+
+                    if (error) {
+                        showStatus('Error updating article', 'error');
+                        return;
+                    }
+
+                    const article = articles.find(a => a.id === currentArticleId);
                     article.title = title;
                     article.content = content;
+                    
+                    showStatus('Article updated!');
                 } else {
-                    // Add new article
-                    const newArticle = {
-                        id: Date.now().toString(),
-                        title,
-                        content,
-                        created_at: new Date().toISOString()
-                    };
-                    category.articles.push(newArticle);
+                    // Create new article
+                    const { data, error } = await supabase
+                        .from('kb_articles')
+                        .insert([{ title, content }])
+                        .select()
+                        .single();
+
+                    if (error) {
+                        showStatus('Error creating article', 'error');
+                        return;
+                    }
+
+                    articles.push(data);
+                    articles.sort((a, b) => a.title.localeCompare(b.title));
+                    showStatus('Article created!');
                 }
 
-                const { error } = await supabase
-                    .from('knowledge_base')
-                    .update({ articles: category.articles })
-                    .eq('id', currentCategoryId);
-
-                if (error) {
-                    showStatus('Error saving article', 'error');
-                    return;
-                }
-
-                showStatus(currentArticleId ? 'Article updated!' : 'Article created!');
                 closeArticleModal();
-                renderCategories();
+                renderArticles();
+                showList();
             }
 
             async function deleteArticle() {
-                if (!confirm('Delete this article?')) return;
-
-                const category = categories.find(c => c.id === currentCategoryId);
-                category.articles = category.articles.filter(a => a.id !== currentArticleId);
+                if (!confirm('Delete this article permanently?')) return;
 
                 const { error } = await supabase
-                    .from('knowledge_base')
-                    .update({ articles: category.articles })
-                    .eq('id', currentCategoryId);
+                    .from('kb_articles')
+                    .delete()
+                    .eq('id', currentArticleId);
 
                 if (error) {
                     showStatus('Error deleting article', 'error');
                     return;
                 }
 
+                articles = articles.filter(a => a.id !== currentArticleId);
                 showStatus('Article deleted');
-                closeArticleModal();
-                renderCategories();
+                showList();
+                renderArticles();
             }
 
             // Event listeners
-            document.getElementById('closeCategoryModal').addEventListener('click', closeCategoryModal);
-            document.getElementById('cancelCategoryBtn').addEventListener('click', closeCategoryModal);
-            document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
+            document.getElementById('newArticleBtn').addEventListener('click', () => openArticleModal());
+            document.getElementById('backToListBtn').addEventListener('click', showList);
+            document.getElementById('editArticleBtn').addEventListener('click', () => {
+                const article = articles.find(a => a.id === currentArticleId);
+                openArticleModal(article);
+            });
+            document.getElementById('deleteArticleBtn').addEventListener('click', deleteArticle);
 
             document.getElementById('closeArticleModal').addEventListener('click', closeArticleModal);
             document.getElementById('cancelArticleBtn').addEventListener('click', closeArticleModal);
             document.getElementById('saveArticleBtn').addEventListener('click', saveArticle);
-            document.getElementById('deleteArticleBtn').addEventListener('click', deleteArticle);
 
             document.getElementById('searchInput').addEventListener('input', (e) => {
-                renderCategories(e.target.value);
+                renderArticles(e.target.value);
             });
 
-            // Close modals on outside click
+            // Close modal on outside click
             window.addEventListener('click', (e) => {
-                if (e.target.id === 'categoryModal') closeCategoryModal();
                 if (e.target.id === 'articleModal') closeArticleModal();
             });
 
             // Load initial data
-            await loadKnowledgeBase();
+            await loadArticles();
         })();
     </script>
 </body>
