@@ -45,6 +45,10 @@
     .status{position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:10px 20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:1000;display:none}
     .status.show{display:block}
     .status.error{background:#ef4444}
+    .history-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .history-select{padding:6px 10px;border-radius:6px;border:1px solid #e6e9ee;font-size:0.9rem}
+    .history-note{font-size:0.85rem;color:#64748b;margin-left:auto}
+    .disabled-note{font-size:0.85rem;color:#ef4444}
     .error-screen{display:none;text-align:center;padding:40px;max-width:500px;margin:100px auto;background:#fff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
     .error-screen h2{color:#ff3b30;margin-bottom:20px}
     .error-screen p{color:#666;margin-bottom:30px;line-height:1.6}
@@ -157,10 +161,16 @@
     </div>
 
     <div class="card wide">
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button id="exportBtn" class="btn small" style="flex:1;max-width:150px">Export CSV</button>
         <button id="resetBtn" class="btn small secondary" style="flex:1;max-width:150px">Reset Today</button>
         <div style="margin-left:auto">Date: <span id="dateLabel"></span></div>
+      </div>
+      <div class="history-controls">
+        <label for="historySelect" style="font-weight:600;color:#0a84ff;">History:</label>
+        <select id="historySelect" class="history-select"></select>
+        <button id="exitHistoryBtn" class="btn small secondary" style="display:none;">Back to Today</button>
+        <span id="historyNote" class="history-note"></span>
       </div>
     </div>
   </div>
@@ -262,15 +272,15 @@
   const exportBtn = document.getElementById('exportBtn');
   const resetBtn = document.getElementById('resetBtn');
   const dateLabel = document.getElementById('dateLabel');
+  const historySelect = document.getElementById('historySelect');
+  const exitHistoryBtn = document.getElementById('exitHistoryBtn');
+  const historyNote = document.getElementById('historyNote');
 
   const todayKey = () => {
     const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return dateKeyFromDate(d);
   };
-  
+
   const formatDate = (d) => {
     const date = new Date(d);
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -278,8 +288,30 @@
     const year = date.getFullYear();
     return `${month}-${day}-${year}`;
   };
-  
-  dateLabel.textContent = formatDate(new Date());
+
+  const dateKeyFromDate = (date) => {
+    const normalized = new Date(date);
+    const year = normalized.getFullYear();
+    const month = String(normalized.getMonth() + 1).padStart(2, '0');
+    const day = String(normalized.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  let currentViewDate = todayKey();
+  let isHistoryView = false;
+  let editingEnabled = true;
+  let currentHistoryDate = null;
+  let availableDates = [];
+
+  const setDateLabel = () => {
+    if (currentHistoryDate) {
+      dateLabel.textContent = formatDate(currentHistoryDate);
+    } else {
+      dateLabel.textContent = formatDate(currentViewDate);
+    }
+  };
+
+  setDateLabel();
 
   const formatSecs = s => {
     s = Math.max(0, Math.round(s));
@@ -311,11 +343,54 @@
     'Requote Premium'
   ];
 
+  function createDefaultState() {
+    return {
+      names: [...defaultNames],
+      totals: Array.from({length: NUM}, () => 0),
+      active: null,
+      listTitles: [...defaultListTitles],
+      listData: Array.from({length: NUM_LISTS}, () => ({ items: [] }))
+    };
+  }
+
   let names = [...defaultNames];
   let totals = Array.from({length:NUM}, ()=>0);
   let active = null;
   let listTitles = [...defaultListTitles];
   let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
+
+  const useState = (state, { allowActive = true } = {}) => {
+    names = [...state.names];
+    totals = [...state.totals];
+    active = allowActive && state.active ? {...state.active} : null;
+    listTitles = [...state.listTitles];
+    listData = state.listData.map(l => ({ items: [...l.items] }));
+  };
+
+  const updateEditingState = () => {
+    resetBtn.disabled = !editingEnabled;
+    const listTitleEls = document.querySelectorAll('.list-title');
+    listTitleEls.forEach((input, idx) => {
+      input.disabled = !editingEnabled;
+      if (!editingEnabled) {
+        input.value = listTitles[idx];
+      }
+    });
+
+    document.querySelectorAll('.todo-input').forEach(input => {
+      input.disabled = !editingEnabled;
+      const original = input.dataset.originalPlaceholder || 'Add new item...';
+      input.placeholder = editingEnabled ? original : 'History view';
+    });
+
+    document.querySelectorAll('.add-item-btn').forEach(btn => {
+      btn.disabled = !editingEnabled;
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.disabled = !editingEnabled;
+    });
+  };
 
   function showStatus(message, type = 'saved') {
     const statusEl = document.getElementById('status');
@@ -327,7 +402,7 @@
   }
 
   async function saveData() {
-    if (!supabase) return;
+    if (!supabase || isHistoryView) return;
     try {
       const today = todayKey();
       const { error } = await supabase
@@ -349,48 +424,91 @@
         showStatus('Error saving', 'error');
       } else {
         showStatus('Saved ✓', 'saved');
+        if (!availableDates.includes(today)) {
+          availableDates = [...new Set([...availableDates, today])];
+          updateHistorySelect();
+        }
       }
     } catch (error) {
       console.error('Error saving data:', error);
     }
   }
 
-  async function loadData() {
-    if (!supabase) return;
+  async function loadData(date = todayKey(), { apply = true, allowActive = true } = {}) {
+    if (!supabase) {
+      const fallback = createDefaultState();
+      if (apply) useState(fallback, { allowActive });
+      return { state: fallback, exists: false };
+    }
+
     try {
-      const today = todayKey();
       const { data, error } = await supabase
         .from('work_data')
         .select('*')
         .eq('user_id', USER_ID)
-        .eq('date', today)
+        .eq('date', date)
         .single();
 
-      if (error) {
-        if (error.code !== 'PGRST116') {
-          console.error('Error loading data:', error);
-        }
-        return;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading data:', error);
       }
 
+      const state = createDefaultState();
+      let exists = false;
+
       if (data) {
-        names = JSON.parse(data.names || JSON.stringify(defaultNames));
-        totals = JSON.parse(data.totals || JSON.stringify(Array(NUM).fill(0)));
-        const loadedActive = JSON.parse(data.active || 'null');
-        
-        // If there's an active timer, keep it running with the original start time
-        if (loadedActive && loadedActive.index !== undefined && loadedActive.index !== -1 && loadedActive.start) {
-          active = loadedActive;
-        } else {
-          active = null;
+        exists = true;
+
+        try {
+          const parsedNames = JSON.parse(data.names || '[]');
+          state.names = Array.from({ length: NUM }, (_, idx) => parsedNames[idx] || defaultNames[idx]);
+        } catch (e) {
+          console.error('Error parsing names:', e);
         }
-        
-        listTitles = JSON.parse(data.list_titles || JSON.stringify(defaultListTitles));
-        const items = JSON.parse(data.list_items || '[]');
-        listData = items.map((itemList, i) => ({ items: itemList || [] }));
+
+        try {
+          const parsedTotals = JSON.parse(data.totals || '[]');
+          state.totals = Array.from({ length: NUM }, (_, idx) => Number(parsedTotals[idx] || 0));
+        } catch (e) {
+          console.error('Error parsing totals:', e);
+        }
+
+        try {
+          const loadedActive = JSON.parse(data.active || 'null');
+          if (loadedActive && typeof loadedActive.index === 'number' && loadedActive.start) {
+            state.active = loadedActive;
+          }
+        } catch (e) {
+          console.error('Error parsing active timer:', e);
+        }
+
+        try {
+          const parsedTitles = JSON.parse(data.list_titles || '[]');
+          state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => parsedTitles[idx] || defaultListTitles[idx]);
+        } catch (e) {
+          console.error('Error parsing list titles:', e);
+        }
+
+        try {
+          const parsedItems = JSON.parse(data.list_items || '[]');
+          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
+            items: Array.isArray(parsedItems[idx]) ? [...parsedItems[idx]] : []
+          }));
+        } catch (e) {
+          console.error('Error parsing list items:', e);
+        }
       }
+
+      if (apply) {
+        useState(state, { allowActive });
+      }
+
+      return { state, exists };
     } catch (error) {
       console.error('Error loading data:', error);
+      const fallback = createDefaultState();
+      if (apply) useState(fallback, { allowActive });
+      return { state: fallback, exists: false };
     }
   }
 
@@ -404,10 +522,14 @@
     
     const name = document.createElement('div');
     name.className = 'name';
-    name.contentEditable = true;
+    name.contentEditable = editingEnabled;
     name.spellcheck = false;
     name.textContent = names[i];
     name.addEventListener('blur', () => {
+      if (!editingEnabled) {
+        name.textContent = names[i];
+        return;
+      }
       names[i] = name.textContent.trim() || `Section ${i+1}`;
       saveData();
     });
@@ -439,6 +561,7 @@
     card.appendChild(btn);
 
     btn.addEventListener('click', () => {
+      if (!editingEnabled) return;
       if (active && active.index === i) {
         stopActive();
       } else {
@@ -458,6 +581,7 @@
   function refreshAll() {
     for (let i=0;i<NUM;i++){
       elems[i].name.textContent = names[i];
+      elems[i].name.contentEditable = editingEnabled;
       elems[i].total.textContent = `Today: ${formatSecs(totals[i])}`;
       if (active && active.index === i) {
         elems[i].btn.classList.remove('start'); elems[i].btn.classList.add('stop');
@@ -467,10 +591,12 @@
         elems[i].btn.textContent = 'Start';
         elems[i].running.textContent = 'Current: 00:00';
       }
+      elems[i].btn.disabled = !editingEnabled;
     }
   }
 
   function startSection(i) {
+    if (!editingEnabled) return;
     const now = Date.now();
     if (active && active.index !== i) {
       const delta = Math.round((now - active.start)/1000);
@@ -482,6 +608,7 @@
   }
 
   function stopActive() {
+    if (!editingEnabled) return;
     if (!active) return;
     const now = Date.now();
     const delta = Math.round((now - active.start)/1000);
@@ -526,7 +653,9 @@
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-btn';
       deleteBtn.textContent = 'Delete';
+      deleteBtn.disabled = !editingEnabled;
       deleteBtn.addEventListener('click', () => {
+        if (!editingEnabled) return;
         listData[index].items.splice(idx, 1);
         saveData();
         renderListItems(index);
@@ -546,19 +675,157 @@
     }
   };
 
+  function applyStateToUI() {
+    refreshAll();
+    for (let i = 0; i < NUM_LISTS; i++) {
+      const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+      if (titleInput) {
+        titleInput.value = listTitles[i];
+      }
+      renderListItems(i);
+    }
+    updateEditingState();
+  }
+
+  function updateHistoryNote() {
+    if (currentHistoryDate) {
+      historyNote.textContent = `Viewing saved day ${formatDate(currentHistoryDate)} (read-only)`;
+      historyNote.classList.add('disabled-note');
+      exitHistoryBtn.style.display = 'inline-flex';
+    } else {
+      historyNote.textContent = '';
+      historyNote.classList.remove('disabled-note');
+      exitHistoryBtn.style.display = 'none';
+    }
+  }
+
+  function updateHistorySelect() {
+    if (!historySelect) return;
+    const today = todayKey();
+    const selectedDate = currentHistoryDate || today;
+    const uniqueDates = new Set([
+      today,
+      ...(currentHistoryDate ? [currentHistoryDate] : []),
+      ...availableDates
+    ]);
+    const sorted = Array.from(uniqueDates).sort((a, b) => b.localeCompare(a));
+    historySelect.innerHTML = '';
+
+    sorted.forEach(dateKey => {
+      if (!dateKey) return;
+      const option = document.createElement('option');
+      option.value = dateKey;
+      option.textContent = dateKey === today
+        ? `Today (${formatDate(dateKey)})`
+        : formatDate(dateKey);
+      historySelect.appendChild(option);
+    });
+
+    historySelect.value = selectedDate;
+  }
+
+  async function loadAvailableDates() {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('work_data')
+        .select('date')
+        .eq('user_id', USER_ID)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error loading available dates:', error);
+        return;
+      }
+
+      const dates = new Set();
+      (data || []).forEach(row => {
+        if (row && row.date) {
+          dates.add(row.date);
+        }
+      });
+      availableDates = Array.from(dates);
+      updateHistorySelect();
+    } catch (error) {
+      console.error('Error loading available dates:', error);
+    }
+  }
+
+  async function enterHistoryDate(dateKey) {
+    const today = todayKey();
+    if (dateKey === today) {
+      await exitHistoryView();
+      return;
+    }
+
+    if (isHistoryView && currentHistoryDate === dateKey) return;
+
+    await saveData();
+
+    const previousDate = currentHistoryDate || today;
+    const { state, exists } = await loadData(dateKey, { apply: false, allowActive: false });
+    if (!exists) {
+      showStatus('No saved data for that day', 'error');
+      historySelect.value = previousDate;
+      return;
+    }
+
+    isHistoryView = true;
+    editingEnabled = false;
+    currentHistoryDate = dateKey;
+    currentViewDate = dateKey;
+    useState(state, { allowActive: false });
+    setDateLabel();
+    applyStateToUI();
+    updateHistoryNote();
+    historySelect.value = dateKey;
+    showStatus(`Viewing saved day: ${formatDate(dateKey)}`);
+  }
+
+  async function exitHistoryView() {
+    const today = todayKey();
+
+    if (!isHistoryView) {
+      currentViewDate = today;
+      currentHistoryDate = null;
+      historySelect.value = today;
+      setDateLabel();
+      updateHistoryNote();
+      return;
+    }
+
+    const { state } = await loadData(today, { apply: false, allowActive: true });
+    currentViewDate = today;
+    currentHistoryDate = null;
+    isHistoryView = false;
+    editingEnabled = true;
+    useState(state, { allowActive: true });
+    setDateLabel();
+    applyStateToUI();
+    updateHistoryNote();
+    historySelect.value = today;
+    showStatus('Back to live data');
+  }
+
   for (let i = 0; i < NUM_LISTS; i++) {
     const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
     const itemInput = document.querySelector(`.todo-input[data-list="${i}"]`);
     const addBtn = document.querySelector(`.add-item-btn[data-list="${i}"]`);
 
     titleInput.value = listTitles[i];
+    titleInput.disabled = !editingEnabled;
 
     titleInput.addEventListener('input', () => {
+      if (!editingEnabled) {
+        titleInput.value = listTitles[i];
+        return;
+      }
       listTitles[i] = titleInput.value;
       saveData();
     });
 
     const addItem = () => {
+      if (!editingEnabled) return;
       const text = itemInput.value.trim();
       if (!text) return;
       listData[i].items.push(text);
@@ -567,13 +834,31 @@
       renderListItems(i);
     };
 
+    addBtn.disabled = !editingEnabled;
     addBtn.addEventListener('click', addItem);
+    itemInput.disabled = !editingEnabled;
+    itemInput.dataset.originalPlaceholder = itemInput.dataset.originalPlaceholder || itemInput.placeholder;
     itemInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') addItem();
     });
 
     renderListItems(i);
   }
+
+  historySelect.addEventListener('change', async () => {
+    const selectedDate = historySelect.value;
+    if (!selectedDate) return;
+    const today = todayKey();
+    if (selectedDate === today) {
+      await exitHistoryView();
+    } else {
+      await enterHistoryDate(selectedDate);
+    }
+  });
+
+  exitHistoryBtn.addEventListener('click', async () => {
+    await exitHistoryView();
+  });
 
   exportBtn.addEventListener('click', () => {
     let runningSecs = 0;
@@ -637,12 +922,19 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${USER_ID}-work-totals-${todayKey()}.csv`;
+    const exportDate = currentHistoryDate
+      ? currentHistoryDate
+      : currentViewDate;
+    a.download = `${USER_ID}-work-totals-${exportDate}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   });
 
   resetBtn.addEventListener('click', () => {
+    if (!editingEnabled) {
+      showStatus('History view is read-only', 'error');
+      return;
+    }
     if (!confirm('Clear today\'s time totals and to-do items? Section names and list titles will be kept.')) return;
     totals = Array.from({length:NUM}, ()=>0);
     active = null;
@@ -654,13 +946,11 @@
     refreshAll();
   });
 
-  await loadData();
-  refreshAll();
-  for (let i = 0; i < NUM_LISTS; i++) {
-    const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
-    titleInput.value = listTitles[i];
-    renderListItems(i);
-  }
+  await loadData(currentViewDate, { apply: true, allowActive: true });
+  applyStateToUI();
+  updateHistoryNote();
+  updateHistorySelect();
+  await loadAvailableDates();
 
 })();
 </script>
