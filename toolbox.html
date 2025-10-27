@@ -169,7 +169,7 @@
       <div class="history-controls">
         <label for="historySelect" style="font-weight:600;color:#0a84ff;">History:</label>
         <select id="historySelect" class="history-select"></select>
-        <button id="exitHistoryBtn" class="btn small secondary" style="display:none;">Back to This Week</button>
+        <button id="exitHistoryBtn" class="btn small secondary" style="display:none;">Back to Today</button>
         <span id="historyNote" class="history-note"></span>
       </div>
     </div>
@@ -297,42 +297,15 @@
     return `${year}-${month}-${day}`;
   };
 
-  const startOfWeek = (dateInput) => {
-    const base = typeof dateInput === 'string' ? new Date(`${dateInput}T00:00:00`) : new Date(dateInput);
-    base.setHours(0, 0, 0, 0);
-    const day = base.getDay();
-    base.setDate(base.getDate() - day);
-    return dateKeyFromDate(base);
-  };
-
-  const endOfWeek = (weekStart) => {
-    const base = new Date(`${weekStart}T00:00:00`);
-    base.setDate(base.getDate() + 6);
-    return dateKeyFromDate(base);
-  };
-
-  const formatWeekRange = (weekStart) => {
-    return `${formatDate(weekStart)} - ${formatDate(endOfWeek(weekStart))}`;
-  };
-
-  const getWeekDates = (weekStart) => {
-    const start = new Date(`${weekStart}T00:00:00`);
-    return Array.from({ length: 7 }, (_, idx) => {
-      const date = new Date(start);
-      date.setDate(start.getDate() + idx);
-      return dateKeyFromDate(date);
-    });
-  };
-
   let currentViewDate = todayKey();
   let isHistoryView = false;
   let editingEnabled = true;
-  let currentHistoryWeek = null;
-  let availableWeeks = [];
+  let currentHistoryDate = null;
+  let availableDates = [];
 
   const setDateLabel = () => {
-    if (currentHistoryWeek) {
-      dateLabel.textContent = formatWeekRange(currentHistoryWeek.start);
+    if (currentHistoryDate) {
+      dateLabel.textContent = formatDate(currentHistoryDate);
     } else {
       dateLabel.textContent = formatDate(currentViewDate);
     }
@@ -451,9 +424,8 @@
         showStatus('Error saving', 'error');
       } else {
         showStatus('Saved ✓', 'saved');
-        const weekStart = startOfWeek(today);
-        if (!availableWeeks.includes(weekStart)) {
-          availableWeeks = [...new Set([...availableWeeks, weekStart])];
+        if (!availableDates.includes(today)) {
+          availableDates = [...new Set([...availableDates, today])];
           updateHistorySelect();
         }
       }
@@ -716,8 +688,8 @@
   }
 
   function updateHistoryNote() {
-    if (currentHistoryWeek) {
-      historyNote.textContent = `Viewing saved week ${formatWeekRange(currentHistoryWeek.start)} (read-only)`;
+    if (currentHistoryDate) {
+      historyNote.textContent = `Viewing saved day ${formatDate(currentHistoryDate)} (read-only)`;
       historyNote.classList.add('disabled-note');
       exitHistoryBtn.style.display = 'inline-flex';
     } else {
@@ -729,30 +701,30 @@
 
   function updateHistorySelect() {
     if (!historySelect) return;
-    const todayWeek = startOfWeek(todayKey());
-    const selectedWeek = currentHistoryWeek ? currentHistoryWeek.start : todayWeek;
-    const uniqueWeeks = new Set([
-      todayWeek,
-      ...(currentHistoryWeek ? [currentHistoryWeek.start] : []),
-      ...availableWeeks
+    const today = todayKey();
+    const selectedDate = currentHistoryDate || today;
+    const uniqueDates = new Set([
+      today,
+      ...(currentHistoryDate ? [currentHistoryDate] : []),
+      ...availableDates
     ]);
-    const sorted = Array.from(uniqueWeeks).sort((a, b) => b.localeCompare(a));
+    const sorted = Array.from(uniqueDates).sort((a, b) => b.localeCompare(a));
     historySelect.innerHTML = '';
 
-    sorted.forEach(weekStart => {
-      if (!weekStart) return;
+    sorted.forEach(dateKey => {
+      if (!dateKey) return;
       const option = document.createElement('option');
-      option.value = weekStart;
-      option.textContent = weekStart === todayWeek
-        ? `This Week (${formatWeekRange(weekStart)})`
-        : formatWeekRange(weekStart);
+      option.value = dateKey;
+      option.textContent = dateKey === today
+        ? `Today (${formatDate(dateKey)})`
+        : formatDate(dateKey);
       historySelect.appendChild(option);
     });
 
-    historySelect.value = selectedWeek;
+    historySelect.value = selectedDate;
   }
 
-  async function loadAvailableWeeks() {
+  async function loadAvailableDates() {
     if (!supabase) return;
     try {
       const { data, error } = await supabase
@@ -762,99 +734,61 @@
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('Error loading available weeks:', error);
+        console.error('Error loading available dates:', error);
         return;
       }
 
-      const weeks = new Set();
+      const dates = new Set();
       (data || []).forEach(row => {
         if (row && row.date) {
-          weeks.add(startOfWeek(row.date));
+          dates.add(row.date);
         }
       });
-      availableWeeks = Array.from(weeks);
+      availableDates = Array.from(dates);
       updateHistorySelect();
     } catch (error) {
-      console.error('Error loading available weeks:', error);
+      console.error('Error loading available dates:', error);
     }
   }
 
-  async function loadWeekAggregate(weekStart) {
-    const aggregate = createDefaultState();
-    const weekDates = getWeekDates(weekStart);
-    let hasAny = false;
-    let latestDate = null;
-    let latestState = null;
-
-    for (const date of weekDates) {
-      const { state, exists } = await loadData(date, { apply: false, allowActive: false });
-      if (!exists) continue;
-
-      hasAny = true;
-      if (!latestDate || date > latestDate) {
-        latestDate = date;
-        latestState = state;
-      }
-
-      for (let i = 0; i < NUM; i++) {
-        aggregate.totals[i] += Number(state.totals[i] || 0);
-      }
-
-      for (let i = 0; i < NUM_LISTS; i++) {
-        const items = state.listData[i] && Array.isArray(state.listData[i].items)
-          ? state.listData[i].items
-          : [];
-        aggregate.listData[i].items.push(...items);
-      }
-    }
-
-    if (latestState) {
-      aggregate.names = [...latestState.names];
-      aggregate.listTitles = [...latestState.listTitles];
-    }
-
-    return { state: aggregate, hasAny };
-  }
-
-  async function enterHistoryWeek(weekStart) {
-    const todayWeek = startOfWeek(todayKey());
-    if (weekStart === todayWeek) {
+  async function enterHistoryDate(dateKey) {
+    const today = todayKey();
+    if (dateKey === today) {
       await exitHistoryView();
       return;
     }
 
-    if (isHistoryView && currentHistoryWeek && currentHistoryWeek.start === weekStart) return;
+    if (isHistoryView && currentHistoryDate === dateKey) return;
 
     await saveData();
 
-    const previousWeek = currentHistoryWeek ? currentHistoryWeek.start : todayWeek;
-    const { state, hasAny } = await loadWeekAggregate(weekStart);
-    if (!hasAny) {
-      showStatus('No saved data for that week', 'error');
-      historySelect.value = previousWeek;
+    const previousDate = currentHistoryDate || today;
+    const { state, exists } = await loadData(dateKey, { apply: false, allowActive: false });
+    if (!exists) {
+      showStatus('No saved data for that day', 'error');
+      historySelect.value = previousDate;
       return;
     }
 
     isHistoryView = true;
     editingEnabled = false;
-    currentHistoryWeek = { start: weekStart, end: endOfWeek(weekStart) };
-    currentViewDate = currentHistoryWeek.start;
+    currentHistoryDate = dateKey;
+    currentViewDate = dateKey;
     useState(state, { allowActive: false });
     setDateLabel();
     applyStateToUI();
     updateHistoryNote();
-    historySelect.value = currentHistoryWeek.start;
-    showStatus(`Viewing week: ${formatWeekRange(weekStart)}`);
+    historySelect.value = dateKey;
+    showStatus(`Viewing saved day: ${formatDate(dateKey)}`);
   }
 
   async function exitHistoryView() {
     const today = todayKey();
-    const todayWeek = startOfWeek(today);
 
     if (!isHistoryView) {
       currentViewDate = today;
-      currentHistoryWeek = null;
-      historySelect.value = todayWeek;
+      currentHistoryDate = null;
+      historySelect.value = today;
       setDateLabel();
       updateHistoryNote();
       return;
@@ -862,14 +796,14 @@
 
     const { state } = await loadData(today, { apply: false, allowActive: true });
     currentViewDate = today;
-    currentHistoryWeek = null;
+    currentHistoryDate = null;
     isHistoryView = false;
     editingEnabled = true;
     useState(state, { allowActive: true });
     setDateLabel();
     applyStateToUI();
     updateHistoryNote();
-    historySelect.value = todayWeek;
+    historySelect.value = today;
     showStatus('Back to live data');
   }
 
@@ -912,13 +846,13 @@
   }
 
   historySelect.addEventListener('change', async () => {
-    const selectedWeek = historySelect.value;
-    if (!selectedWeek) return;
-    const todayWeek = startOfWeek(todayKey());
-    if (selectedWeek === todayWeek) {
+    const selectedDate = historySelect.value;
+    if (!selectedDate) return;
+    const today = todayKey();
+    if (selectedDate === today) {
       await exitHistoryView();
     } else {
-      await enterHistoryWeek(selectedWeek);
+      await enterHistoryDate(selectedDate);
     }
   });
 
@@ -988,8 +922,8 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const exportDate = currentHistoryWeek
-      ? `${currentHistoryWeek.start}-to-${currentHistoryWeek.end}`
+    const exportDate = currentHistoryDate
+      ? currentHistoryDate
       : currentViewDate;
     a.download = `${USER_ID}-work-totals-${exportDate}.csv`;
     a.click();
@@ -1016,7 +950,7 @@
   applyStateToUI();
   updateHistoryNote();
   updateHistorySelect();
-  await loadAvailableWeeks();
+  await loadAvailableDates();
 
 })();
 </script>
