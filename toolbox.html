@@ -15,9 +15,30 @@
     .user-display{font-weight:600;color:#0a84ff}
     .logout-btn{padding:8px 16px;background:#ff3b30;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600}
     .logout-btn:hover{background:#d32f2f}
+    .clock-section{background:#fff;padding:16px 20px;border-radius:10px;box-shadow:0 4px 10px rgba(12,18,30,0.05);margin-bottom:20px;border:2px solid #0a84ff}
+    .clock-controls{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+    .clock-btn{padding:10px 24px;border-radius:8px;border:0;cursor:pointer;font-size:1rem;font-weight:600;color:white}
+    .clock-start{background:#10b981}
+    .clock-start:hover{background:#059669}
+    .clock-stop{background:#ff3b30}
+    .clock-stop:hover{background:#d32f2f}
+    .clock-btn:disabled{opacity:0.5;cursor:not-allowed}
+    .timer-displays{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .timer-display{text-align:center;padding:12px;background:#f9fafb;border-radius:8px;border:1px solid #e6e9ee}
+    .timer-label{font-size:0.85rem;color:#64748b;margin-bottom:4px;font-weight:600}
+    .timer-value{font-size:1.4rem;font-weight:700;color:#0a84ff;font-variant-numeric:tabular-nums}
+    .section-title{font-size:1.1rem;font-weight:700;color:#0b1220;margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid #e6e9ee}
+    .tasks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
     .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
     .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
+    .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
+    .name{font-weight:600;flex:1;white-space:pre-line;font-size:0.95rem}
+    .meta{font-size:0.9rem;color:#334155;display:flex;flex-direction:column;align-items:flex-end;font-variant-numeric:tabular-nums}
     .btn{padding:12px 20px;border-radius:8px;border:0;cursor:pointer;font-size:1rem;font-weight:600;margin-top:8px}
+    .btn.start{background:#0a84ff;color:white;width:100%}
+    .btn.start:hover{background:#0077ed}
+    .btn.stop{background:#ff3b30;color:white;width:100%}
+    .btn.stop:hover{background:#d32f2f}
     .small{font-size:0.85rem;padding:6px 8px}
     .wide{grid-column:1/-1}
     input[type=number]{width:70px;padding:6px}
@@ -80,6 +101,31 @@
       <button class="logout-btn" id="logoutBtn">Logout</button>
     </div>
 
+    <div class="clock-section">
+      <div class="clock-controls">
+        <button id="clockStartBtn" class="clock-btn clock-start">Clock In</button>
+        <button id="clockStopBtn" class="clock-btn clock-stop" disabled>Clock Out</button>
+      </div>
+      <div class="timer-displays">
+        <div class="timer-display">
+          <div class="timer-label">Time Clocked In</div>
+          <div class="timer-value" id="clockedInTime">00:00:00</div>
+        </div>
+        <div class="timer-display">
+          <div class="timer-label">Time Being Used</div>
+          <div class="timer-value" id="usedTime">00:00:00</div>
+        </div>
+        <div class="timer-display">
+          <div class="timer-label">Time Being Wasted</div>
+          <div class="timer-value" id="wastedTime">00:00:00</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Tasks</h2>
+    <div id="tasksGrid" class="tasks-grid"></div>
+
+    <h2 class="section-title">Sales</h2>
     <div class="lists-grid">
       <div class="card">
         <div class="list-title-wrapper">
@@ -98,7 +144,7 @@
           <span class="list-total-header" data-list="1"></span>
         </div>
         <div class="todo-list" data-list="1"></div>
-        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
           <input type="text" class="todo-input" data-list="1" placeholder="Add new item..." />
           <button class="btn small add-item-btn" data-list="1">Add</button>
         </div>
@@ -109,7 +155,7 @@
           <span class="list-total-header" data-list="2"></span>
         </div>
         <div class="todo-list" data-list="2"></div>
-        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
           <input type="text" class="todo-input" data-list="2" placeholder="Add new item..." />
           <button class="btn small add-item-btn" data-list="2">Add</button>
         </div>
@@ -120,130 +166,9 @@
           <span class="list-total-header" data-list="3"></span>
         </div>
         <div class="todo-list" data-list="3"></div>
-        <div style="display:flex;gap:4px;margin-top:12px;align-items:stretch;">
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
           <input type="text" class="todo-input" data-list="3" placeholder="Add new item..." />
           <button class="btn small add-item-btn" data-list="3">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="4" placeholder="List Title" />
-          <span class="list-total-header" data-list="4"></span>
-        </div>
-        <div class="todo-list" data-list="4"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="4" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="4">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="5" placeholder="List Title" />
-          <span class="list-total-header" data-list="5"></span>
-        </div>
-        <div class="todo-list" data-list="5"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="5" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="5">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="6" placeholder="List Title" />
-          <span class="list-total-header" data-list="6"></span>
-        </div>
-        <div class="todo-list" data-list="6"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="6" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="6">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="7" placeholder="List Title" />
-          <span class="list-total-header" data-list="7"></span>
-        </div>
-        <div class="todo-list" data-list="7"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="7" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="7">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="8" placeholder="List Title" />
-          <span class="list-total-header" data-list="8"></span>
-        </div>
-        <div class="todo-list" data-list="8"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="8" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="8">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="9" placeholder="List Title" />
-          <span class="list-total-header" data-list="9"></span>
-        </div>
-        <div class="todo-list" data-list="9"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="9" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="9">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="10" placeholder="List Title" />
-          <span class="list-total-header" data-list="10"></span>
-        </div>
-        <div class="todo-list" data-list="10"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="10" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="10">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="11" placeholder="List Title" />
-          <span class="list-total-header" data-list="11"></span>
-        </div>
-        <div class="todo-list" data-list="11"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="11" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="11">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="12" placeholder="List Title" />
-          <span class="list-total-header" data-list="12"></span>
-        </div>
-        <div class="todo-list" data-list="12"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="12" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="12">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="13" placeholder="List Title" />
-          <span class="list-total-header" data-list="13"></span>
-        </div>
-        <div class="todo-list" data-list="13"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="13" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="13">Add</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="14" placeholder="List Title" />
-          <span class="list-total-header" data-list="14"></span>
-        </div>
-        <div class="todo-list" data-list="14"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
-          <input type="text" class="todo-input" data-list="14" placeholder="Add new item..." />
-          <button class="btn small add-item-btn" data-list="14">Add</button>
         </div>
       </div>
     </div>
@@ -354,13 +279,20 @@
   });
 
   // ORIGINAL TOOLBOX CODE BELOW
-  const NUM_LISTS = 15;
+  const NUM_TASKS = 11;
+  const NUM_LISTS = 4;
+  const tasksGrid = document.getElementById('tasksGrid');
   const exportBtn = document.getElementById('exportBtn');
   const resetBtn = document.getElementById('resetBtn');
   const dateLabel = document.getElementById('dateLabel');
   const historySelect = document.getElementById('historySelect');
   const exitHistoryBtn = document.getElementById('exitHistoryBtn');
   const historyNote = document.getElementById('historyNote');
+  const clockStartBtn = document.getElementById('clockStartBtn');
+  const clockStopBtn = document.getElementById('clockStopBtn');
+  const clockedInTime = document.getElementById('clockedInTime');
+  const usedTime = document.getElementById('usedTime');
+  const wastedTime = document.getElementById('wastedTime');
 
   const todayKey = () => {
     const d = new Date();
@@ -426,18 +358,29 @@
 
   setDateLabel();
 
-  const defaultListTitles = [
-    'Automations',
-    'Email/Text',
+  const formatSecs = s => {
+    s = Math.max(0, Math.round(s));
+    const hours = Math.floor(s/3600);
+    const mins = Math.floor((s%3600)/60);
+    const secs = s%60;
+    return `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  };
+
+  const defaultTaskNames = [
+    'Automations (Text Blaze)',
+    'Daily Follow Ups',
+    'Email/Text responses',
     'Fixing Post-Bound Policy Issues',
-    'Follow Up',
     'In-Bound Calls',
     'Interviews',
+    'Jared\'s Automations',
     'Loom Presentations',
-    'New Business',
-    'Requotes',
-    'Interviews Done',
-    'Loom Presentations Done',
+    'New Business/Cross Sales quotes',
+    'Current Client requotes',
+    'Other'
+  ];
+
+  const defaultListTitles = [
     'New Business Submission',
     'New Business Premium',
     'Requote Submission',
@@ -446,21 +389,39 @@
 
   function createDefaultState() {
     return {
+      taskNames: [...defaultTaskNames],
+      taskTotals: Array.from({length: NUM_TASKS}, () => 0),
+      activeTask: null,
+      clockStart: null,
+      clockTotal: 0,
       listTitles: [...defaultListTitles],
       listData: Array.from({length: NUM_LISTS}, () => ({ items: [] }))
     };
   }
 
+  let taskNames = [...defaultTaskNames];
+  let taskTotals = Array.from({length: NUM_TASKS}, () => 0);
+  let activeTask = null;
+  let clockStart = null;
+  let clockTotal = 0;
   let listTitles = [...defaultListTitles];
   let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
 
   const useState = (state) => {
+    taskNames = [...state.taskNames];
+    taskTotals = [...state.taskTotals];
+    activeTask = state.activeTask ? {...state.activeTask} : null;
+    clockStart = state.clockStart || null;
+    clockTotal = state.clockTotal || 0;
     listTitles = [...state.listTitles];
     listData = state.listData.map(l => ({ items: [...l.items] }));
   };
 
   const updateEditingState = () => {
     resetBtn.disabled = !editingEnabled;
+    clockStartBtn.disabled = !editingEnabled || clockStart !== null;
+    clockStopBtn.disabled = !editingEnabled || clockStart === null;
+
     const listTitleEls = document.querySelectorAll('.list-title');
     listTitleEls.forEach((input, idx) => {
       input.disabled = !editingEnabled;
@@ -482,6 +443,10 @@
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.disabled = !editingEnabled;
     });
+
+    document.querySelectorAll('.btn.start, .btn.stop').forEach(btn => {
+      btn.disabled = !editingEnabled || clockStart === null;
+    });
   };
 
   function showStatus(message, type = 'saved') {
@@ -502,6 +467,11 @@
         .upsert([{
           user_id: USER_ID,
           date: today,
+          names: JSON.stringify(taskNames),
+          totals: JSON.stringify(taskTotals),
+          active: JSON.stringify(activeTask),
+          clock_start: JSON.stringify(clockStart),
+          clock_total: clockTotal,
           list_titles: JSON.stringify(listTitles),
           list_items: JSON.stringify(listData.map(l => l.items))
         }], {
@@ -550,6 +520,38 @@
         exists = true;
 
         try {
+          const parsedNames = JSON.parse(data.names || '[]');
+          state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => parsedNames[idx] || defaultTaskNames[idx]);
+        } catch (e) {
+          console.error('Error parsing task names:', e);
+        }
+
+        try {
+          const parsedTotals = JSON.parse(data.totals || '[]');
+          state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
+        } catch (e) {
+          console.error('Error parsing task totals:', e);
+        }
+
+        try {
+          const loadedActive = JSON.parse(data.active || 'null');
+          if (loadedActive && typeof loadedActive.index === 'number' && loadedActive.start) {
+            state.activeTask = loadedActive;
+          }
+        } catch (e) {
+          console.error('Error parsing active task:', e);
+        }
+
+        try {
+          const loadedClockStart = JSON.parse(data.clock_start || 'null');
+          state.clockStart = loadedClockStart;
+        } catch (e) {
+          console.error('Error parsing clock start:', e);
+        }
+
+        state.clockTotal = Number(data.clock_total || 0);
+
+        try {
           const parsedTitles = JSON.parse(data.list_titles || '[]');
           state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => parsedTitles[idx] || defaultListTitles[idx]);
         } catch (e) {
@@ -579,11 +581,186 @@
     }
   }
 
+  // Task box creation and management
+  const taskElems = [];
+  function makeTaskSection(i) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const header = document.createElement('div');
+    header.className = 'section-header';
+
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = taskNames[i];
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+
+    const total = document.createElement('div');
+    total.textContent = `Today: ${formatSecs(taskTotals[i])}`;
+
+    const running = document.createElement('div');
+    running.textContent = `Current: 00:00:00`;
+
+    meta.appendChild(total);
+    meta.appendChild(running);
+
+    header.appendChild(name);
+    header.appendChild(meta);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn start';
+    btn.textContent = 'Start';
+    btn.disabled = clockStart === null;
+
+    card.appendChild(header);
+    card.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      if (!editingEnabled || clockStart === null) return;
+      if (activeTask && activeTask.index === i) {
+        stopActiveTask();
+      } else {
+        startTask(i);
+      }
+    });
+
+    return {card, btn, running, total, name};
+  }
+
+  for (let i=0; i<NUM_TASKS; i++){
+    const obj = makeTaskSection(i);
+    taskElems.push(obj);
+    tasksGrid.appendChild(obj.card);
+  }
+
+  function refreshTaskTimers() {
+    for (let i=0; i<NUM_TASKS; i++){
+      taskElems[i].name.textContent = taskNames[i];
+      taskElems[i].total.textContent = `Today: ${formatSecs(taskTotals[i])}`;
+      if (activeTask && activeTask.index === i) {
+        taskElems[i].btn.classList.remove('start');
+        taskElems[i].btn.classList.add('stop');
+        taskElems[i].btn.textContent = 'Stop';
+      } else {
+        taskElems[i].btn.classList.remove('stop');
+        taskElems[i].btn.classList.add('start');
+        taskElems[i].btn.textContent = 'Start';
+        taskElems[i].running.textContent = 'Current: 00:00:00';
+      }
+      taskElems[i].btn.disabled = !editingEnabled || clockStart === null;
+    }
+  }
+
+  function startTask(i) {
+    if (!editingEnabled || clockStart === null) return;
+    const now = Date.now();
+    if (activeTask && activeTask.index !== i) {
+      const delta = Math.round((now - activeTask.start)/1000);
+      taskTotals[activeTask.index] = (taskTotals[activeTask.index]||0) + delta;
+    }
+    activeTask = {index:i, start: now};
+    saveData();
+    refreshTaskTimers();
+  }
+
+  function stopActiveTask() {
+    if (!editingEnabled) return;
+    if (!activeTask) return;
+    const now = Date.now();
+    const delta = Math.round((now - activeTask.start)/1000);
+    taskTotals[activeTask.index] = (taskTotals[activeTask.index]||0) + delta;
+    activeTask = null;
+    saveData();
+    refreshTaskTimers();
+  }
+
+  // Clock management
+  function clockIn() {
+    if (!editingEnabled || clockStart !== null) return;
+    clockStart = Date.now();
+    clockStartBtn.disabled = true;
+    clockStopBtn.disabled = false;
+    document.querySelectorAll('.btn.start, .btn.stop').forEach(btn => {
+      btn.disabled = false;
+    });
+    saveData();
+  }
+
+  function clockOut() {
+    if (!editingEnabled || clockStart === null) return;
+    const now = Date.now();
+    const delta = Math.round((now - clockStart)/1000);
+    clockTotal += delta;
+
+    // Stop active task if any
+    if (activeTask) {
+      const taskDelta = Math.round((now - activeTask.start)/1000);
+      taskTotals[activeTask.index] = (taskTotals[activeTask.index]||0) + taskDelta;
+      activeTask = null;
+    }
+
+    clockStart = null;
+    clockStartBtn.disabled = false;
+    clockStopBtn.disabled = true;
+    document.querySelectorAll('.btn.start, .btn.stop').forEach(btn => {
+      btn.disabled = true;
+    });
+    saveData();
+    refreshTaskTimers();
+  }
+
+  clockStartBtn.addEventListener('click', clockIn);
+  clockStopBtn.addEventListener('click', clockOut);
+
+  // Update timers every 500ms
+  setInterval(()=> {
+    // Update task timer if active
+    if (activeTask) {
+      const now = Date.now();
+      const sec = Math.round((now - activeTask.start)/1000);
+      taskElems[activeTask.index].running.textContent = `Current: ${formatSecs(sec)}`;
+      taskElems[activeTask.index].total.textContent = `Today: ${formatSecs(taskTotals[activeTask.index] + sec)}`;
+    }
+
+    // Update clock timers
+    if (clockStart) {
+      const now = Date.now();
+      const clockSecs = Math.round((now - clockStart)/1000);
+      const totalClockSecs = clockTotal + clockSecs;
+      clockedInTime.textContent = formatSecs(totalClockSecs);
+
+      // Calculate total task time
+      let totalTaskSecs = 0;
+      for (let i = 0; i < NUM_TASKS; i++) {
+        totalTaskSecs += taskTotals[i];
+      }
+      if (activeTask) {
+        const taskSecs = Math.round((now - activeTask.start)/1000);
+        totalTaskSecs += taskSecs;
+      }
+
+      usedTime.textContent = formatSecs(totalTaskSecs);
+      wastedTime.textContent = formatSecs(totalClockSecs - totalTaskSecs);
+    } else {
+      // Show final values when clocked out
+      clockedInTime.textContent = formatSecs(clockTotal);
+
+      let totalTaskSecs = 0;
+      for (let i = 0; i < NUM_TASKS; i++) {
+        totalTaskSecs += taskTotals[i];
+      }
+
+      usedTime.textContent = formatSecs(totalTaskSecs);
+      wastedTime.textContent = formatSecs(clockTotal - totalTaskSecs);
+    }
+  }, 500);
 
   const renderListItems = (index) => {
     const todoListEl = document.querySelector(`.todo-list[data-list="${index}"]`);
     const totalEl = document.querySelector(`.list-total-header[data-list="${index}"]`);
-    const hasTotals = index === 12 || index === 14;
+    const hasTotals = index === 1 || index === 3; // New Business Premium and Requote Premium
     
     todoListEl.innerHTML = '';
     let total = 0;
@@ -629,6 +806,7 @@
   };
 
   function applyStateToUI() {
+    refreshTaskTimers();
     for (let i = 0; i < NUM_LISTS; i++) {
       const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
       if (titleInput) {
@@ -720,6 +898,15 @@
         latestState = state;
       }
 
+      // Aggregate task totals
+      for (let i = 0; i < NUM_TASKS; i++) {
+        aggregate.taskTotals[i] += Number(state.taskTotals[i] || 0);
+      }
+
+      // Aggregate clock time
+      aggregate.clockTotal += Number(state.clockTotal || 0);
+
+      // Aggregate list items
       for (let i = 0; i < NUM_LISTS; i++) {
         const items = state.listData[i] && Array.isArray(state.listData[i].items)
           ? state.listData[i].items
@@ -729,6 +916,7 @@
     }
 
     if (latestState) {
+      aggregate.taskNames = [...latestState.taskNames];
       aggregate.listTitles = [...latestState.listTitles];
     }
 
@@ -846,15 +1034,34 @@
   });
 
   exportBtn.addEventListener('click', () => {
-    const headers = [];
+    // Build headers: Task names + time + separator + Sales list titles
+    const headers = ['Task', 'Time (HH:MM:SS)', ''];
     listTitles.forEach(title => headers.push(title));
     const rows = [headers];
 
     const maxItems = Math.max(...listData.map(l => l.items.length), 0);
+    const maxRows = Math.max(NUM_TASKS, maxItems);
 
-    for (let rowIdx = 0; rowIdx < maxItems; rowIdx++) {
+    for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
       const row = [];
 
+      // Add task data
+      if (rowIdx < NUM_TASKS) {
+        let taskSecs = taskTotals[rowIdx];
+        if (activeTask && activeTask.index === rowIdx) {
+          const now = Date.now();
+          taskSecs += Math.round((now - activeTask.start)/1000);
+        }
+        row.push(taskNames[rowIdx]);
+        row.push(formatSecs(taskSecs));
+      } else {
+        row.push('');
+        row.push('');
+      }
+
+      row.push(''); // Separator
+
+      // Add sales list data
       for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
         const item = listData[listIdx].items[rowIdx];
         row.push(item || '');
@@ -863,9 +1070,10 @@
       rows.push(row);
     }
 
-    const totalRow = [];
+    // Add totals row
+    const totalRow = ['', '', ''];
     for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
-      const hasTotals = listIdx === 12 || listIdx === 14;
+      const hasTotals = listIdx === 1 || listIdx === 3; // New Business Premium and Requote Premium
 
       if (hasTotals) {
         let sum = 0;
@@ -881,7 +1089,26 @@
       }
     }
     rows.push(totalRow);
-    
+
+    // Add summary row for clock time
+    rows.push([]);
+    rows.push(['Summary', '', '']);
+    let finalClockSecs = clockTotal;
+    if (clockStart) {
+      finalClockSecs += Math.round((Date.now() - clockStart)/1000);
+    }
+    rows.push(['Time Clocked In', formatSecs(finalClockSecs), '']);
+
+    let totalTaskSecs = 0;
+    for (let i = 0; i < NUM_TASKS; i++) {
+      totalTaskSecs += taskTotals[i];
+    }
+    if (activeTask) {
+      totalTaskSecs += Math.round((Date.now() - activeTask.start)/1000);
+    }
+    rows.push(['Time Being Used', formatSecs(totalTaskSecs), '']);
+    rows.push(['Time Being Wasted', formatSecs(finalClockSecs - totalTaskSecs), '']);
+
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
@@ -900,12 +1127,26 @@
       showStatus('History view is read-only', 'error');
       return;
     }
-    if (!confirm('Clear today\'s to-do items? List titles will be kept.')) return;
+    if (!confirm('Clear today\'s task times, clock time, and sales items? Task names and list titles will be kept.')) return;
+
+    // Reset tasks
+    taskTotals = Array.from({length: NUM_TASKS}, () => 0);
+    activeTask = null;
+
+    // Reset clock
+    clockStart = null;
+    clockTotal = 0;
+    clockStartBtn.disabled = false;
+    clockStopBtn.disabled = true;
+
+    // Reset sales lists
     for (let i = 0; i < NUM_LISTS; i++) {
       listData[i].items = [];
       renderListItems(i);
     }
+
     saveData();
+    refreshTaskTimers();
   });
 
   await loadData(currentViewDate, { apply: true });
