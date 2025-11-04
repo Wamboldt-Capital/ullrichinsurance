@@ -374,6 +374,24 @@
     return `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
   };
 
+  const parseJSON = (value, fallback) => {
+    if (value === null || value === undefined || value === '') {
+      return fallback;
+    }
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.error('Error parsing JSON value:', error);
+        return fallback;
+      }
+    }
+    if (typeof value === 'object') {
+      return value;
+    }
+    return fallback;
+  };
+
   const defaultTaskNames = [
     'Automations (Text Blaze)',
     'Daily Follow Ups',
@@ -420,12 +438,22 @@
   let taskItems = defaultTaskItems();
 
   const useState = (state) => {
-    taskNames = [...defaultTaskNames];
+    taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => {
+      if (state.taskNames && typeof state.taskNames[idx] === 'string') {
+        return state.taskNames[idx];
+      }
+      return defaultTaskNames[idx];
+    });
     taskTotals = [...state.taskTotals];
     activeTask = state.activeTask ? {...state.activeTask} : null;
     clockStart = state.clockStart || null;
     clockTotal = state.clockTotal || 0;
-    listTitles = [...defaultListTitles];
+    listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => {
+      if (state.listTitles && typeof state.listTitles[idx] === 'string') {
+        return state.listTitles[idx];
+      }
+      return defaultListTitles[idx];
+    });
     listData = state.listData.map(l => ({ items: [...l.items] }));
     taskItems = state.taskItems ? state.taskItems.map(items => items.map(item => ({
       id: item.id || generateTaskId(),
@@ -542,75 +570,73 @@
       if (data) {
         exists = true;
 
-        try {
-          const parsedTotals = JSON.parse(data.totals || '[]');
-          state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
-        } catch (e) {
-          console.error('Error parsing task totals:', e);
-        }
-
-        try {
-          const loadedActive = JSON.parse(data.active || 'null');
-          if (loadedActive && loadedActive.start) {
-            if (typeof loadedActive.taskIndex === 'number' && loadedActive.itemId) {
-              state.activeTask = loadedActive;
-            } else if (typeof loadedActive.index === 'number') {
-              state.activeTask = {
-                taskIndex: loadedActive.index,
-                itemId: loadedActive.itemId || null,
-                start: loadedActive.start
-              };
-            }
+        const parsedNames = parseJSON(data.names, []);
+        state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => {
+          if (parsedNames && typeof parsedNames[idx] === 'string') {
+            return parsedNames[idx];
           }
-        } catch (e) {
-          console.error('Error parsing active task:', e);
+          return defaultTaskNames[idx];
+        });
+
+        const parsedTotals = parseJSON(data.totals, []);
+        state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
+
+        const loadedActive = parseJSON(data.active, null);
+        if (loadedActive && loadedActive.start) {
+          if (typeof loadedActive.taskIndex === 'number' && loadedActive.itemId) {
+            state.activeTask = loadedActive;
+          } else if (typeof loadedActive.index === 'number') {
+            state.activeTask = {
+              taskIndex: loadedActive.index,
+              itemId: loadedActive.itemId || null,
+              start: loadedActive.start
+            };
+          }
         }
 
-        try {
-          const loadedClockStart = JSON.parse(data.clock_start || 'null');
-          state.clockStart = loadedClockStart;
-        } catch (e) {
-          console.error('Error parsing clock start:', e);
-        }
-
+        state.clockStart = parseJSON(data.clock_start, null);
         state.clockTotal = Number(data.clock_total || 0);
 
-        try {
-          const parsedItems = JSON.parse(data.list_items || '[]');
-          if (Array.isArray(parsedItems)) {
-            state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
-              items: Array.isArray(parsedItems[idx]) ? [...parsedItems[idx]] : []
-            }));
-            state.taskItems = defaultTaskItems();
-          } else if (parsedItems && typeof parsedItems === 'object') {
-            const salesItems = Array.isArray(parsedItems.sales)
-              ? parsedItems.sales
-              : [];
-            state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
-              items: Array.isArray(salesItems[idx]) ? [...salesItems[idx]] : []
-            }));
+        const parsedTitles = parseJSON(data.list_titles, []);
+        state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => {
+          if (parsedTitles && typeof parsedTitles[idx] === 'string') {
+            return parsedTitles[idx];
+          }
+          return defaultListTitles[idx];
+        });
 
-            if (Array.isArray(parsedItems.tasks)) {
-              state.taskItems = Array.from({ length: NUM_TASKS }, (_, idx) => {
-                const source = parsedItems.tasks[idx];
-                if (!Array.isArray(source)) return [];
-                return source
-                  .filter(item => item && typeof item === 'object')
-                  .map(item => ({
-                    id: item.id || generateTaskId(),
-                    text: item.text || '',
-                    total: Number(item.total || 0)
-                  }));
-              });
-            } else {
-              state.taskItems = defaultTaskItems();
-            }
+        const parsedItems = parseJSON(data.list_items, []);
+        if (Array.isArray(parsedItems)) {
+          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
+            items: Array.isArray(parsedItems[idx]) ? [...parsedItems[idx]] : []
+          }));
+          state.taskItems = defaultTaskItems();
+        } else if (parsedItems && typeof parsedItems === 'object') {
+          const salesItems = Array.isArray(parsedItems.sales)
+            ? parsedItems.sales
+            : [];
+          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
+            items: Array.isArray(salesItems[idx]) ? [...salesItems[idx]] : []
+          }));
+
+          if (Array.isArray(parsedItems.tasks)) {
+            state.taskItems = Array.from({ length: NUM_TASKS }, (_, idx) => {
+              const source = parsedItems.tasks[idx];
+              if (!Array.isArray(source)) return [];
+              return source
+                .filter(item => item && typeof item === 'object')
+                .map(item => ({
+                  id: item.id || generateTaskId(),
+                  text: item.text || '',
+                  total: Number(item.total || 0)
+                }));
+            });
           } else {
-            state.listData = Array.from({ length: NUM_LISTS }, () => ({ items: [] }));
             state.taskItems = defaultTaskItems();
           }
-        } catch (e) {
-          console.error('Error parsing list items:', e);
+        } else {
+          state.listData = Array.from({ length: NUM_LISTS }, () => ({ items: [] }));
+          state.taskItems = defaultTaskItems();
         }
       }
 
