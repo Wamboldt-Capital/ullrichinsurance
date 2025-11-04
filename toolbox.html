@@ -412,6 +412,9 @@
         return fallback;
       }
     }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return value;
+    }
     if (typeof value === 'object') {
       return value;
     }
@@ -748,23 +751,6 @@
 
       if (state.taskItems && state.taskItems.some(items => items.length > 0)) {
         state.taskTotals = state.taskItems.map(items => items.reduce((acc, item) => acc + Number(item.total || 0), 0));
-      }
-
-      // Validate clockStart - clear it if it's more than 24 hours old
-      if (state.clockStart) {
-        const clockAge = Date.now() - state.clockStart;
-        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-        if (clockAge > maxAge || clockAge < 0) {
-          console.warn('Clearing stale clockStart timestamp:', new Date(state.clockStart));
-          state.clockStart = null;
-          // If we're loading today's data and clearing clockStart, save immediately
-          if (date === todayKey()) {
-            setTimeout(() => {
-              clockStart = null;
-              saveData();
-            }, 100);
-          }
-        }
       }
 
       if (apply) {
