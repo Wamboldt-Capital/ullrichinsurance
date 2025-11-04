@@ -28,7 +28,8 @@
     .timer-label{font-size:0.85rem;color:#64748b;margin-bottom:4px;font-weight:600}
     .timer-value{font-size:1.4rem;font-weight:700;color:#0a84ff;font-variant-numeric:tabular-nums}
     .section-title{font-size:1.1rem;font-weight:700;color:#0b1220;margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid #e6e9ee}
-    .tasks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .tasks-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px}
+    .tasks-grid .task-card{grid-column:1/-1}
     .sales-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
     .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
     .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
@@ -282,13 +283,30 @@
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     if (confirm('Are you sure you want to logout?')) {
       await deleteSession(sessionToken);
-      window.location.href = 'https://ireallylovetexas.github.io/ullrichinsurance/';
+      window.location.href = 'https://wamboldt-capital.github.io/ullrichinsurance/';
     }
   });
 
   // ORIGINAL TOOLBOX CODE BELOW
   const NUM_TASKS = 11;
   const NUM_LISTS = 4;
+
+  function generateTaskId() {
+    return `task-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  }
+
+  function sanitizeTaskItems(source) {
+    return Array.from({ length: NUM_TASKS }, (_, idx) => {
+      const rawItems = Array.isArray(source && source[idx]) ? source[idx] : [];
+      return rawItems
+        .filter(item => item && typeof item === 'object')
+        .map(item => ({
+          id: typeof item.id === 'string' && item.id ? item.id : generateTaskId(),
+          text: typeof item.text === 'string' ? item.text : String(item.text ?? ''),
+          total: Number(item.total || 0)
+        }));
+    });
+  }
   const tasksGrid = document.getElementById('tasksGrid');
   const exportBtn = document.getElementById('exportBtn');
   const resetBtn = document.getElementById('resetBtn');
@@ -413,7 +431,7 @@
     'Requote Premium'
   ];
 
-  const defaultTaskItems = () => Array.from({ length: NUM_TASKS }, () => []);
+  const defaultTaskItems = () => sanitizeTaskItems([]);
 
   function createDefaultState() {
     return {
@@ -444,7 +462,12 @@
       }
       return defaultTaskNames[idx];
     });
-    taskTotals = [...state.taskTotals];
+    taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => {
+      if (state.taskTotals && typeof state.taskTotals[idx] !== 'undefined') {
+        return Number(state.taskTotals[idx] || 0);
+      }
+      return 0;
+    });
     activeTask = state.activeTask ? {...state.activeTask} : null;
     clockStart = state.clockStart || null;
     clockTotal = state.clockTotal || 0;
@@ -454,12 +477,12 @@
       }
       return defaultListTitles[idx];
     });
-    listData = state.listData.map(l => ({ items: [...l.items] }));
-    taskItems = state.taskItems ? state.taskItems.map(items => items.map(item => ({
-      id: item.id || generateTaskId(),
-      text: item.text || '',
-      total: Number(item.total || 0)
-    }))) : defaultTaskItems();
+    listData = Array.from({ length: NUM_LISTS }, (_, idx) => {
+      const source = state.listData && state.listData[idx];
+      const items = source && Array.isArray(source.items) ? source.items : [];
+      return { items: [...items] };
+    });
+    taskItems = sanitizeTaskItems(state.taskItems);
     if (typeof recalculateTaskTotals === 'function' && taskItems.some(items => items.length > 0)) {
       recalculateTaskTotals();
     }
@@ -506,39 +529,96 @@
     if (!supabase || isHistoryView) return;
     try {
       const today = todayKey();
-      const { error } = await supabase
-        .from('work_data')
-        .upsert([{
+
+      const normalizedTaskItems = taskItems.map(items => {
+        return items.reduce((acc, item) => {
+          if (!item || typeof item !== 'object') return acc;
+          if (typeof item.id !== 'string' || !item.id) {
+            item.id = generateTaskId();
+          }
+          item.text = typeof item.text === 'string' ? item.text : String(item.text ?? '');
+          item.total = Number(item.total || 0);
+          acc.push({ id: item.id, text: item.text, total: item.total });
+          return acc;
+        }, []);
+      });
+
+      const salesItems = listData.map(list => Array.isArray(list.items) ? [...list.items] : []);
+
+      const namesPayload = {
+        version: 2,
+        names: [...taskNames],
+        taskItems: normalizedTaskItems,
+        tasks: normalizedTaskItems
+      };
+
+      const listItemsPayload = {
+        version: 2,
+        sales: salesItems,
+        tasks: normalizedTaskItems
+      };
+
+      const buildRow = (stringifyJSON = false) => {
+        const base = {
           user_id: USER_ID,
           date: today,
-          names: JSON.stringify(taskNames),
-          totals: JSON.stringify(taskTotals),
-          active: JSON.stringify(activeTask),
-          clock_start: JSON.stringify(clockStart),
-          clock_total: clockTotal,
-          list_titles: JSON.stringify(listTitles),
-          list_items: JSON.stringify({
-            sales: listData.map(l => l.items),
-            tasks: taskItems.map(items => items.map(item => ({
-              id: item.id,
-              text: item.text,
-              total: item.total
-            })))
-          })
-        }], {
+          clock_total: Number(clockTotal || 0)
+        };
+
+        if (stringifyJSON) {
+          return {
+            ...base,
+            names: JSON.stringify(namesPayload),
+            totals: JSON.stringify(taskTotals.map(Number)),
+            active: JSON.stringify(activeTask),
+            clock_start: JSON.stringify(clockStart),
+            list_titles: JSON.stringify([...listTitles]),
+            list_items: JSON.stringify(listItemsPayload)
+          };
+        }
+
+        return {
+          ...base,
+          names: namesPayload,
+          totals: taskTotals.map(Number),
+          active: activeTask ? { ...activeTask } : null,
+          clock_start: clockStart,
+          list_titles: [...listTitles],
+          list_items: {
+            version: listItemsPayload.version,
+            sales: listItemsPayload.sales.map(items => [...items]),
+            tasks: listItemsPayload.tasks.map(items => items.map(item => ({ ...item })))
+          }
+        };
+      };
+
+      let { error } = await supabase
+        .from('work_data')
+        .upsert([buildRow(false)], {
           onConflict: 'user_id,date'
         });
 
       if (error) {
+        console.error('Supabase save error (JSON attempt):', error);
+        const fallback = await supabase
+          .from('work_data')
+          .upsert([buildRow(true)], {
+            onConflict: 'user_id,date'
+          });
+        error = fallback.error;
+      }
+
+      if (error) {
         console.error('Supabase error:', error);
         showStatus('Error saving', 'error');
-      } else {
-        showStatus('Saved ✓', 'saved');
-        const weekStart = startOfWeek(today);
-        if (!availableWeeks.includes(weekStart)) {
-          availableWeeks = [...new Set([...availableWeeks, weekStart])];
-          updateHistorySelect();
-        }
+        return;
+      }
+
+      showStatus('Saved ✓', 'saved');
+      const weekStart = startOfWeek(today);
+      if (!availableWeeks.includes(weekStart)) {
+        availableWeeks = [...new Set([...availableWeeks, weekStart])];
+        updateHistorySelect();
       }
     } catch (error) {
       console.error('Error saving data:', error);
@@ -570,10 +650,28 @@
       if (data) {
         exists = true;
 
-        const parsedNames = parseJSON(data.names, []);
+        const parsedNamesRaw = parseJSON(data.names, []);
+        let candidateNames = null;
+        let taskItemsFromNames = null;
+
+        if (Array.isArray(parsedNamesRaw)) {
+          candidateNames = parsedNamesRaw;
+        } else if (parsedNamesRaw && typeof parsedNamesRaw === 'object') {
+          if (Array.isArray(parsedNamesRaw.names)) {
+            candidateNames = parsedNamesRaw.names;
+          } else if (Array.isArray(parsedNamesRaw.taskNames)) {
+            candidateNames = parsedNamesRaw.taskNames;
+          }
+
+          const rawTaskItems = parsedNamesRaw.taskItems || parsedNamesRaw.tasks;
+          if (rawTaskItems) {
+            taskItemsFromNames = sanitizeTaskItems(rawTaskItems);
+          }
+        }
+
         state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => {
-          if (parsedNames && typeof parsedNames[idx] === 'string') {
-            return parsedNames[idx];
+          if (candidateNames && typeof candidateNames[idx] === 'string') {
+            return candidateNames[idx];
           }
           return defaultTaskNames[idx];
         });
@@ -606,38 +704,25 @@
         });
 
         const parsedItems = parseJSON(data.list_items, []);
-        if (Array.isArray(parsedItems)) {
-          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
-            items: Array.isArray(parsedItems[idx]) ? [...parsedItems[idx]] : []
-          }));
-          state.taskItems = defaultTaskItems();
-        } else if (parsedItems && typeof parsedItems === 'object') {
-          const salesItems = Array.isArray(parsedItems.sales)
-            ? parsedItems.sales
-            : [];
-          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
-            items: Array.isArray(salesItems[idx]) ? [...salesItems[idx]] : []
-          }));
+        let salesSource = null;
+        let taskItemsFromLists = null;
 
-          if (Array.isArray(parsedItems.tasks)) {
-            state.taskItems = Array.from({ length: NUM_TASKS }, (_, idx) => {
-              const source = parsedItems.tasks[idx];
-              if (!Array.isArray(source)) return [];
-              return source
-                .filter(item => item && typeof item === 'object')
-                .map(item => ({
-                  id: item.id || generateTaskId(),
-                  text: item.text || '',
-                  total: Number(item.total || 0)
-                }));
-            });
-          } else {
-            state.taskItems = defaultTaskItems();
+        if (Array.isArray(parsedItems)) {
+          salesSource = parsedItems;
+        } else if (parsedItems && typeof parsedItems === 'object') {
+          salesSource = Array.isArray(parsedItems.sales) ? parsedItems.sales : parsedItems;
+          const rawListTasks = parsedItems.tasks || parsedItems.taskItems;
+          if (rawListTasks) {
+            taskItemsFromLists = sanitizeTaskItems(rawListTasks);
           }
-        } else {
-          state.listData = Array.from({ length: NUM_LISTS }, () => ({ items: [] }));
-          state.taskItems = defaultTaskItems();
         }
+
+        state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
+          items: Array.isArray(salesSource && salesSource[idx]) ? [...salesSource[idx]] : []
+        }));
+
+        const resolvedTaskItems = taskItemsFromNames || taskItemsFromLists;
+        state.taskItems = resolvedTaskItems ? resolvedTaskItems : defaultTaskItems();
       }
 
       if (state.activeTask) {
@@ -674,15 +759,13 @@
   const taskCards = [];
   const taskItemRefs = Array.from({ length: NUM_TASKS }, () => new Map());
 
-  const generateTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
-
   const findTaskItem = (taskIndex, itemId) => {
     return taskItems[taskIndex].find(item => item.id === itemId) || null;
   };
 
   function makeTaskSection(index) {
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'card task-card';
 
     const header = document.createElement('div');
     header.className = 'list-title-wrapper';
@@ -1139,6 +1222,7 @@
     if (latestState) {
       aggregate.taskNames = [...latestState.taskNames];
       aggregate.listTitles = [...latestState.listTitles];
+      aggregate.taskItems = sanitizeTaskItems(latestState.taskItems);
     }
 
     return { state: aggregate, hasAny };
