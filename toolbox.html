@@ -497,11 +497,9 @@
   };
 
   const updateEditingState = () => {
-    console.log('updateEditingState called - clockStart:', clockStart, 'editingEnabled:', editingEnabled);
     resetBtn.disabled = !editingEnabled;
     clockStartBtn.disabled = !editingEnabled || clockStart !== null;
     clockStopBtn.disabled = !editingEnabled || clockStart === null;
-    console.log('Button states - Start disabled:', clockStartBtn.disabled, 'Stop disabled:', clockStopBtn.disabled);
 
     document.querySelectorAll('.todo-input').forEach(input => {
       input.disabled = !editingEnabled;
@@ -750,6 +748,23 @@
 
       if (state.taskItems && state.taskItems.some(items => items.length > 0)) {
         state.taskTotals = state.taskItems.map(items => items.reduce((acc, item) => acc + Number(item.total || 0), 0));
+      }
+
+      // Validate clockStart - clear it if it's more than 24 hours old
+      if (state.clockStart) {
+        const clockAge = Date.now() - state.clockStart;
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        if (clockAge > maxAge || clockAge < 0) {
+          console.warn('Clearing stale clockStart timestamp:', new Date(state.clockStart));
+          state.clockStart = null;
+          // If we're loading today's data and clearing clockStart, save immediately
+          if (date === todayKey()) {
+            setTimeout(() => {
+              clockStart = null;
+              saveData();
+            }, 100);
+          }
+        }
       }
 
       if (apply) {
@@ -1032,7 +1047,6 @@
   // Function to update timer displays
   function updateTimerDisplays() {
     const now = Date.now();
-    console.log('updateTimerDisplays called - clockStart:', clockStart, 'clockTotal:', clockTotal);
 
     if (clockStart) {
       const clockSecs = Math.round((now - clockStart)/1000);
@@ -1052,7 +1066,6 @@
       usedTime.textContent = formatSecs(totalTaskSecs);
       const wastedSecs = Math.max(0, totalClockSecs - totalTaskSecs);
       wastedTime.textContent = formatSecs(wastedSecs);
-      console.log('Clocked IN - totalClock:', totalClockSecs, 'totalTask:', totalTaskSecs, 'wasted:', wastedSecs);
     } else {
       // Show final values when clocked out
       clockedInTime.textContent = formatSecs(clockTotal);
@@ -1065,7 +1078,6 @@
       usedTime.textContent = formatSecs(totalTaskSecs);
       const wastedSecs = Math.max(0, clockTotal - totalTaskSecs);
       wastedTime.textContent = formatSecs(wastedSecs);
-      console.log('Clocked OUT - clockTotal:', clockTotal, 'totalTask:', totalTaskSecs, 'wasted:', wastedSecs);
     }
   }
 
