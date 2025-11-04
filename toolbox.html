@@ -1001,6 +1001,7 @@
     document.querySelectorAll('.task-timer-btn').forEach(btn => {
       btn.disabled = false;
     });
+    updateTimerDisplays();
     saveData();
   }
 
@@ -1023,19 +1024,12 @@
     });
     saveData();
     refreshAllTaskSections(now);
+    updateTimerDisplays();
   }
 
-  clockStartBtn.addEventListener('click', clockIn);
-  clockStopBtn.addEventListener('click', clockOut);
-
-  // Update timers every 500ms
-  setInterval(()=> {
+  // Function to update timer displays
+  function updateTimerDisplays() {
     const now = Date.now();
-    if (activeTask) {
-      refreshTaskSection(activeTask.taskIndex, now);
-    }
-
-    // Update clock timers
     if (clockStart) {
       const clockSecs = Math.round((now - clockStart)/1000);
       const totalClockSecs = clockTotal + clockSecs;
@@ -1052,7 +1046,7 @@
       }
 
       usedTime.textContent = formatSecs(totalTaskSecs);
-      wastedTime.textContent = formatSecs(totalClockSecs - totalTaskSecs);
+      wastedTime.textContent = formatSecs(Math.max(0, totalClockSecs - totalTaskSecs));
     } else {
       // Show final values when clocked out
       clockedInTime.textContent = formatSecs(clockTotal);
@@ -1063,8 +1057,22 @@
       }
 
       usedTime.textContent = formatSecs(totalTaskSecs);
-      wastedTime.textContent = formatSecs(clockTotal - totalTaskSecs);
+      wastedTime.textContent = formatSecs(Math.max(0, clockTotal - totalTaskSecs));
     }
+  }
+
+  clockStartBtn.addEventListener('click', clockIn);
+  clockStopBtn.addEventListener('click', clockOut);
+
+  // Update timers every 500ms
+  setInterval(()=> {
+    const now = Date.now();
+    if (activeTask) {
+      refreshTaskSection(activeTask.taskIndex, now);
+    }
+
+    // Update clock timers
+    updateTimerDisplays();
   }, 500);
 
   const renderSalesList = (index) => {
@@ -1126,6 +1134,7 @@
       }
       renderSalesList(i);
     }
+    updateTimerDisplays();
     updateEditingState();
   }
 
@@ -1455,6 +1464,7 @@
       renderTaskList(i);
     }
 
+    updateTimerDisplays();
     saveData();
     refreshAllTaskSections();
   });
