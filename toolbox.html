@@ -15,18 +15,9 @@
     .user-display{font-weight:600;color:#0a84ff}
     .logout-btn{padding:8px 16px;background:#ff3b30;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600}
     .logout-btn:hover{background:#d32f2f}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
     .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
     .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
-    .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
-    .name{font-weight:600;flex:1;white-space:pre-line}
-    .name[contenteditable]{padding:2px 6px;border-radius:6px}
     .btn{padding:12px 20px;border-radius:8px;border:0;cursor:pointer;font-size:1rem;font-weight:600;margin-top:8px}
-    .btn.start,.btn.stop{width:100%;align-self:flex-end}
-    .start{background:#0a84ff;color:white}
-    .stop{background:#ff3b30;color:white}
-    .meta{font-size:0.9rem;color:#334155;display:flex;flex-direction:column;align-items:flex-start;font-variant-numeric:tabular-nums}
-    .big{font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
     .small{font-size:0.85rem;padding:6px 8px}
     .wide{grid-column:1/-1}
     input[type=number]{width:70px;padding:6px}
@@ -88,8 +79,6 @@
       </div>
       <button class="logout-btn" id="logoutBtn">Logout</button>
     </div>
-
-    <div id="sections" class="grid"></div>
 
     <div class="lists-grid">
       <div class="card">
@@ -156,6 +145,105 @@
         <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
           <input type="text" class="todo-input" data-list="5" placeholder="Add new item..." />
           <button class="btn small add-item-btn" data-list="5">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="6" placeholder="List Title" />
+          <span class="list-total-header" data-list="6"></span>
+        </div>
+        <div class="todo-list" data-list="6"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="6" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="6">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="7" placeholder="List Title" />
+          <span class="list-total-header" data-list="7"></span>
+        </div>
+        <div class="todo-list" data-list="7"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="7" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="7">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="8" placeholder="List Title" />
+          <span class="list-total-header" data-list="8"></span>
+        </div>
+        <div class="todo-list" data-list="8"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="8" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="8">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="9" placeholder="List Title" />
+          <span class="list-total-header" data-list="9"></span>
+        </div>
+        <div class="todo-list" data-list="9"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="9" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="9">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="10" placeholder="List Title" />
+          <span class="list-total-header" data-list="10"></span>
+        </div>
+        <div class="todo-list" data-list="10"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="10" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="10">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="11" placeholder="List Title" />
+          <span class="list-total-header" data-list="11"></span>
+        </div>
+        <div class="todo-list" data-list="11"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="11" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="11">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="12" placeholder="List Title" />
+          <span class="list-total-header" data-list="12"></span>
+        </div>
+        <div class="todo-list" data-list="12"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="12" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="12">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="13" placeholder="List Title" />
+          <span class="list-total-header" data-list="13"></span>
+        </div>
+        <div class="todo-list" data-list="13"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="13" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="13">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="list-title-wrapper">
+          <input type="text" class="list-title" data-list="14" placeholder="List Title" />
+          <span class="list-total-header" data-list="14"></span>
+        </div>
+        <div class="todo-list" data-list="14"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+          <input type="text" class="todo-input" data-list="14" placeholder="Add new item..." />
+          <button class="btn small add-item-btn" data-list="14">Add</button>
         </div>
       </div>
     </div>
@@ -266,9 +354,7 @@
   });
 
   // ORIGINAL TOOLBOX CODE BELOW
-  const NUM = 9;
-  const NUM_LISTS = 6;
-  const sectionsEl = document.getElementById('sections');
+  const NUM_LISTS = 15;
   const exportBtn = document.getElementById('exportBtn');
   const resetBtn = document.getElementById('resetBtn');
   const dateLabel = document.getElementById('dateLabel');
@@ -340,16 +426,7 @@
 
   setDateLabel();
 
-  const formatSecs = s => {
-    s = Math.max(0, Math.round(s));
-    const hours = Math.floor(s/3600);
-    const mins = Math.floor((s%3600)/60);
-    const secs = s%60;
-    if (hours>0) return `${hours}h ${String(mins).padStart(2,'0')}m`;
-    return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-  };
-
-  const defaultNames = [
+  const defaultListTitles = [
     'Automations',
     'Email/Text',
     'Fixing Post-Bound Policy Issues',
@@ -358,12 +435,9 @@
     'Interviews',
     'Loom Presentations',
     'New Business',
-    'Requotes'
-  ];
-
-  const defaultListTitles = [
+    'Requotes',
     'Interviews Done',
-    'Loom Presentations',
+    'Loom Presentations Done',
     'New Business Submission',
     'New Business Premium',
     'Requote Submission',
@@ -372,24 +446,15 @@
 
   function createDefaultState() {
     return {
-      names: [...defaultNames],
-      totals: Array.from({length: NUM}, () => 0),
-      active: null,
       listTitles: [...defaultListTitles],
       listData: Array.from({length: NUM_LISTS}, () => ({ items: [] }))
     };
   }
 
-  let names = [...defaultNames];
-  let totals = Array.from({length:NUM}, ()=>0);
-  let active = null;
   let listTitles = [...defaultListTitles];
   let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
 
-  const useState = (state, { allowActive = true } = {}) => {
-    names = [...state.names];
-    totals = [...state.totals];
-    active = allowActive && state.active ? {...state.active} : null;
+  const useState = (state) => {
     listTitles = [...state.listTitles];
     listData = state.listData.map(l => ({ items: [...l.items] }));
   };
@@ -437,9 +502,6 @@
         .upsert([{
           user_id: USER_ID,
           date: today,
-          names: JSON.stringify(names),
-          totals: JSON.stringify(totals),
-          active: JSON.stringify(active),
           list_titles: JSON.stringify(listTitles),
           list_items: JSON.stringify(listData.map(l => l.items))
         }], {
@@ -462,10 +524,10 @@
     }
   }
 
-  async function loadData(date = todayKey(), { apply = true, allowActive = true } = {}) {
+  async function loadData(date = todayKey(), { apply = true } = {}) {
     if (!supabase) {
       const fallback = createDefaultState();
-      if (apply) useState(fallback, { allowActive });
+      if (apply) useState(fallback);
       return { state: fallback, exists: false };
     }
 
@@ -488,29 +550,6 @@
         exists = true;
 
         try {
-          const parsedNames = JSON.parse(data.names || '[]');
-          state.names = Array.from({ length: NUM }, (_, idx) => parsedNames[idx] || defaultNames[idx]);
-        } catch (e) {
-          console.error('Error parsing names:', e);
-        }
-
-        try {
-          const parsedTotals = JSON.parse(data.totals || '[]');
-          state.totals = Array.from({ length: NUM }, (_, idx) => Number(parsedTotals[idx] || 0));
-        } catch (e) {
-          console.error('Error parsing totals:', e);
-        }
-
-        try {
-          const loadedActive = JSON.parse(data.active || 'null');
-          if (loadedActive && typeof loadedActive.index === 'number' && loadedActive.start) {
-            state.active = loadedActive;
-          }
-        } catch (e) {
-          console.error('Error parsing active timer:', e);
-        }
-
-        try {
           const parsedTitles = JSON.parse(data.list_titles || '[]');
           state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => parsedTitles[idx] || defaultListTitles[idx]);
         } catch (e) {
@@ -528,137 +567,23 @@
       }
 
       if (apply) {
-        useState(state, { allowActive });
+        useState(state);
       }
 
       return { state, exists };
     } catch (error) {
       console.error('Error loading data:', error);
       const fallback = createDefaultState();
-      if (apply) useState(fallback, { allowActive });
+      if (apply) useState(fallback);
       return { state: fallback, exists: false };
     }
   }
 
-  const elems = [];
-  function makeSection(i) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    
-    const header = document.createElement('div');
-    header.className = 'section-header';
-    
-    const name = document.createElement('div');
-    name.className = 'name';
-    name.contentEditable = editingEnabled;
-    name.spellcheck = false;
-    name.textContent = names[i];
-    name.addEventListener('blur', () => {
-      if (!editingEnabled) {
-        name.textContent = names[i];
-        return;
-      }
-      names[i] = name.textContent.trim() || `Section ${i+1}`;
-      saveData();
-    });
-    name.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
-    });
-
-    const rightSide = document.createElement('div');
-    rightSide.className = 'meta';
-    
-    const total = document.createElement('div');
-    total.textContent = `Today: ${formatSecs(totals[i])}`;
-    
-    const running = document.createElement('div');
-    running.className = 'running';
-    running.textContent = `Current: 00:00`;
-    
-    rightSide.appendChild(total);
-    rightSide.appendChild(running);
-    
-    header.appendChild(name);
-    header.appendChild(rightSide);
-
-    const btn = document.createElement('button');
-    btn.className = 'btn start';
-    btn.textContent = 'Start';
-    
-    card.appendChild(header);
-    card.appendChild(btn);
-
-    btn.addEventListener('click', () => {
-      if (!editingEnabled) return;
-      if (active && active.index === i) {
-        stopActive();
-      } else {
-        startSection(i);
-      }
-    });
-
-    return {card, btn, running, total, name};
-  }
-
-  for (let i=0;i<NUM;i++){
-    const obj = makeSection(i);
-    elems.push(obj);
-    sectionsEl.appendChild(obj.card);
-  }
-
-  function refreshAll() {
-    for (let i=0;i<NUM;i++){
-      elems[i].name.textContent = names[i];
-      elems[i].name.contentEditable = editingEnabled;
-      elems[i].total.textContent = `Today: ${formatSecs(totals[i])}`;
-      if (active && active.index === i) {
-        elems[i].btn.classList.remove('start'); elems[i].btn.classList.add('stop');
-        elems[i].btn.textContent = 'Stop';
-      } else {
-        elems[i].btn.classList.remove('stop'); elems[i].btn.classList.add('start');
-        elems[i].btn.textContent = 'Start';
-        elems[i].running.textContent = 'Current: 00:00';
-      }
-      elems[i].btn.disabled = !editingEnabled;
-    }
-  }
-
-  function startSection(i) {
-    if (!editingEnabled) return;
-    const now = Date.now();
-    if (active && active.index !== i) {
-      const delta = Math.round((now - active.start)/1000);
-      totals[active.index] = (totals[active.index]||0) + delta;
-    }
-    active = {index:i, start: now};
-    saveData();
-    refreshAll();
-  }
-
-  function stopActive() {
-    if (!editingEnabled) return;
-    if (!active) return;
-    const now = Date.now();
-    const delta = Math.round((now - active.start)/1000);
-    totals[active.index] = (totals[active.index]||0) + delta;
-    active = null;
-    saveData();
-    refreshAll();
-  }
-
-  setInterval(()=> {
-    if (active) {
-      const now = Date.now();
-      const sec = Math.round((now - active.start)/1000);
-      elems[active.index].running.textContent = `Current: ${formatSecs(sec)}`;
-      elems[active.index].total.textContent = `Today: ${formatSecs(totals[active.index] + sec)}`;
-    }
-  }, 500);
 
   const renderListItems = (index) => {
     const todoListEl = document.querySelector(`.todo-list[data-list="${index}"]`);
     const totalEl = document.querySelector(`.list-total-header[data-list="${index}"]`);
-    const hasTotals = index === 3 || index === 5;
+    const hasTotals = index === 12 || index === 14;
     
     todoListEl.innerHTML = '';
     let total = 0;
@@ -704,7 +629,6 @@
   };
 
   function applyStateToUI() {
-    refreshAll();
     for (let i = 0; i < NUM_LISTS; i++) {
       const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
       if (titleInput) {
@@ -787,17 +711,13 @@
     let latestState = null;
 
     for (const date of weekDates) {
-      const { state, exists } = await loadData(date, { apply: false, allowActive: false });
+      const { state, exists } = await loadData(date, { apply: false });
       if (!exists) continue;
 
       hasAny = true;
       if (!latestDate || date > latestDate) {
         latestDate = date;
         latestState = state;
-      }
-
-      for (let i = 0; i < NUM; i++) {
-        aggregate.totals[i] += Number(state.totals[i] || 0);
       }
 
       for (let i = 0; i < NUM_LISTS; i++) {
@@ -809,7 +729,6 @@
     }
 
     if (latestState) {
-      aggregate.names = [...latestState.names];
       aggregate.listTitles = [...latestState.listTitles];
     }
 
@@ -839,7 +758,7 @@
     editingEnabled = false;
     currentHistoryWeek = { start: weekStart, end: endOfWeek(weekStart) };
     currentViewDate = currentHistoryWeek.start;
-    useState(state, { allowActive: false });
+    useState(state);
     setDateLabel();
     applyStateToUI();
     updateHistoryNote();
@@ -860,12 +779,12 @@
       return;
     }
 
-    const { state } = await loadData(today, { apply: false, allowActive: true });
+    const { state } = await loadData(today, { apply: false });
     currentViewDate = today;
     currentHistoryWeek = null;
     isHistoryView = false;
     editingEnabled = true;
-    useState(state, { allowActive: true });
+    useState(state);
     setDateLabel();
     applyStateToUI();
     updateHistoryNote();
@@ -927,47 +846,27 @@
   });
 
   exportBtn.addEventListener('click', () => {
-    let runningSecs = 0;
-    if (active) {
-      runningSecs = Math.round((Date.now() - active.start)/1000);
-    }
-    
-    const headers = ['Section', 'HH:MM:SS', ''];
+    const headers = [];
     listTitles.forEach(title => headers.push(title));
     const rows = [headers];
-    
+
     const maxItems = Math.max(...listData.map(l => l.items.length), 0);
-    const maxRows = Math.max(NUM, maxItems);
-    
-    for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
+
+    for (let rowIdx = 0; rowIdx < maxItems; rowIdx++) {
       const row = [];
-      
-      if (rowIdx < NUM) {
-        const secs = totals[rowIdx] + (active && active.index===rowIdx ? runningSecs : 0);
-        const hh = Math.floor(secs/3600).toString().padStart(2,'0');
-        const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
-        const ss = (secs%60).toString().padStart(2,'0');
-        row.push(names[rowIdx].replace(/,/g,' '));
-        row.push(`${hh}:${mm}:${ss}`);
-      } else {
-        row.push('');
-        row.push('');
-      }
-      
-      row.push('');
-      
+
       for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
         const item = listData[listIdx].items[rowIdx];
         row.push(item || '');
       }
-      
+
       rows.push(row);
     }
-    
-    const totalRow = ['', '', ''];
+
+    const totalRow = [];
     for (let listIdx = 0; listIdx < NUM_LISTS; listIdx++) {
-      const hasTotals = listIdx === 3 || listIdx === 5;
-      
+      const hasTotals = listIdx === 12 || listIdx === 14;
+
       if (hasTotals) {
         let sum = 0;
         listData[listIdx].items.forEach(item => {
@@ -1001,18 +900,15 @@
       showStatus('History view is read-only', 'error');
       return;
     }
-    if (!confirm('Clear today\'s time totals and to-do items? Section names and list titles will be kept.')) return;
-    totals = Array.from({length:NUM}, ()=>0);
-    active = null;
+    if (!confirm('Clear today\'s to-do items? List titles will be kept.')) return;
     for (let i = 0; i < NUM_LISTS; i++) {
       listData[i].items = [];
       renderListItems(i);
     }
     saveData();
-    refreshAll();
   });
 
-  await loadData(currentViewDate, { apply: true, allowActive: true });
+  await loadData(currentViewDate, { apply: true });
   applyStateToUI();
   updateHistoryNote();
   updateHistorySelect();
