@@ -550,7 +550,14 @@
           clock_start: JSON.stringify(clockStart),
           clock_total: clockTotal,
           list_titles: JSON.stringify(listTitles),
-          list_items: JSON.stringify(listData.map(l => l.items))
+          list_items: JSON.stringify({
+            sales: listData.map(l => l.items),
+            tasks: taskItems.map(items => items.map(item => ({
+              id: item.id,
+              text: item.text,
+              total: item.total
+            })))
+          })
         }], {
           onConflict: 'user_id,date'
         });
