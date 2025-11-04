@@ -79,6 +79,7 @@
     .spinner{border:4px solid #f3f3f3;border-top:4px solid #0a84ff;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
   </style>
+  <script src="supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -199,8 +200,15 @@
 
 <script>
 (async () => {
-  const SUPABASE_URL = 'https://nggpymtnuuxfvgcuzemd.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI';
+  const config = window.TOOLBOX_SUPABASE_CONFIG || {};
+  const SUPABASE_URL = config.url;
+  const SUPABASE_ANON_KEY = config.anonKey;
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error('Missing Supabase configuration.');
+    showError('Supabase is not configured. Please update supabase-config.js.');
+    return;
+  }
 
   let supabase;
   try {
