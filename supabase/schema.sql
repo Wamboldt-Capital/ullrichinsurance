@@ -61,17 +61,20 @@ alter table public.users enable row level security;
 alter table public.sessions enable row level security;
 alter table public.work_data enable row level security;
 
-create policy if not exists "Users full access" on public.users
+drop policy if exists "Users full access" on public.users;
+create policy "Users full access" on public.users
   for all
   using (true)
   with check (true);
 
-create policy if not exists "Sessions full access" on public.sessions
+drop policy if exists "Sessions full access" on public.sessions;
+create policy "Sessions full access" on public.sessions
   for all
   using (true)
   with check (true);
 
-create policy if not exists "Work data full access" on public.work_data
+drop policy if exists "Work data full access" on public.work_data;
+create policy "Work data full access" on public.work_data
   for all
   using (true)
   with check (true);
