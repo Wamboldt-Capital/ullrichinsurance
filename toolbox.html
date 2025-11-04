@@ -29,7 +29,7 @@
     .timer-value{font-size:1.4rem;font-weight:700;color:#0a84ff;font-variant-numeric:tabular-nums}
     .section-title{font-size:1.1rem;font-weight:700;color:#0b1220;margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid #e6e9ee}
     .tasks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-    .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+    .sales-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
     .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
     .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
     .name{font-weight:600;flex:1;white-space:pre-line;font-size:0.95rem}
@@ -44,8 +44,7 @@
     input[type=number]{width:70px;padding:6px}
     .secondary{background:#f3f4f6;border:1px solid #e6e9ee}
     .list-title-wrapper{display:flex;align-items:center;gap:12px;border-bottom:2px solid #e6e9ee;margin-bottom:16px}
-    .list-title{font-size:1.2rem;font-weight:600;border:none;padding:8px 4px;flex:1}
-    .list-title:focus{outline:none}
+    .sales-title{font-size:1.05rem;font-weight:700;color:#0b1220;flex:1;padding:4px 0}
     .list-title-wrapper:focus-within{border-bottom-color:#0a84ff}
     .list-total-header{font-weight:700;font-size:1.1rem;color:#0a84ff;padding:8px 12px;background:white;border-radius:6px;white-space:nowrap}
     .todo-input{flex:1;padding:8px 12px;border:1px solid #e6e9ee;border-radius:6px;font-size:0.95rem}
@@ -103,8 +102,8 @@
 
     <div class="clock-section">
       <div class="clock-controls">
-        <button id="clockStartBtn" class="clock-btn clock-start">Clock In</button>
-        <button id="clockStopBtn" class="clock-btn clock-stop" disabled>Clock Out</button>
+        <button id="clockStartBtn" class="clock-btn clock-start">Start</button>
+        <button id="clockStopBtn" class="clock-btn clock-stop" disabled>Stop</button>
       </div>
       <div class="timer-displays">
         <div class="timer-display">
@@ -126,10 +125,10 @@
     <div id="tasksGrid" class="tasks-grid"></div>
 
     <h2 class="section-title">Sales</h2>
-    <div class="lists-grid">
+    <div class="sales-grid">
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="0" placeholder="List Title" />
+          <div class="sales-title" data-list="0">New Business Submission</div>
           <span class="list-total-header" data-list="0"></span>
         </div>
         <div class="todo-list" data-list="0"></div>
@@ -140,7 +139,7 @@
       </div>
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="1" placeholder="List Title" />
+          <div class="sales-title" data-list="1">New Business Premium</div>
           <span class="list-total-header" data-list="1"></span>
         </div>
         <div class="todo-list" data-list="1"></div>
@@ -151,7 +150,7 @@
       </div>
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="2" placeholder="List Title" />
+          <div class="sales-title" data-list="2">Requote Submission</div>
           <span class="list-total-header" data-list="2"></span>
         </div>
         <div class="todo-list" data-list="2"></div>
@@ -162,7 +161,7 @@
       </div>
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="3" placeholder="List Title" />
+          <div class="sales-title" data-list="3">Requote Premium</div>
           <span class="list-total-header" data-list="3"></span>
         </div>
         <div class="todo-list" data-list="3"></div>
@@ -369,14 +368,14 @@
   const defaultTaskNames = [
     'Automations (Text Blaze)',
     'Daily Follow Ups',
-    'Email/Text responses',
+    'Email/Text Responses',
     'Fixing Post-Bound Policy Issues',
     'In-Bound Calls',
     'Interviews',
     'Jared\'s Automations',
     'Loom Presentations',
-    'New Business/Cross Sales quotes',
-    'Current Client requotes',
+    'New Business/Cross Sales Quotes',
+    'Current Client Requotes',
     'Other'
   ];
 
@@ -408,12 +407,12 @@
   let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
 
   const useState = (state) => {
-    taskNames = [...state.taskNames];
+    taskNames = [...defaultTaskNames];
     taskTotals = [...state.taskTotals];
     activeTask = state.activeTask ? {...state.activeTask} : null;
     clockStart = state.clockStart || null;
     clockTotal = state.clockTotal || 0;
-    listTitles = [...state.listTitles];
+    listTitles = [...defaultListTitles];
     listData = state.listData.map(l => ({ items: [...l.items] }));
   };
 
@@ -421,14 +420,6 @@
     resetBtn.disabled = !editingEnabled;
     clockStartBtn.disabled = !editingEnabled || clockStart !== null;
     clockStopBtn.disabled = !editingEnabled || clockStart === null;
-
-    const listTitleEls = document.querySelectorAll('.list-title');
-    listTitleEls.forEach((input, idx) => {
-      input.disabled = !editingEnabled;
-      if (!editingEnabled) {
-        input.value = listTitles[idx];
-      }
-    });
 
     document.querySelectorAll('.todo-input').forEach(input => {
       input.disabled = !editingEnabled;
@@ -520,13 +511,6 @@
         exists = true;
 
         try {
-          const parsedNames = JSON.parse(data.names || '[]');
-          state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => parsedNames[idx] || defaultTaskNames[idx]);
-        } catch (e) {
-          console.error('Error parsing task names:', e);
-        }
-
-        try {
           const parsedTotals = JSON.parse(data.totals || '[]');
           state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
         } catch (e) {
@@ -550,13 +534,6 @@
         }
 
         state.clockTotal = Number(data.clock_total || 0);
-
-        try {
-          const parsedTitles = JSON.parse(data.list_titles || '[]');
-          state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => parsedTitles[idx] || defaultListTitles[idx]);
-        } catch (e) {
-          console.error('Error parsing list titles:', e);
-        }
 
         try {
           const parsedItems = JSON.parse(data.list_items || '[]');
@@ -808,9 +785,9 @@
   function applyStateToUI() {
     refreshTaskTimers();
     for (let i = 0; i < NUM_LISTS; i++) {
-      const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
-      if (titleInput) {
-        titleInput.value = listTitles[i];
+      const titleEl = document.querySelector(`.sales-title[data-list="${i}"]`);
+      if (titleEl) {
+        titleEl.textContent = listTitles[i];
       }
       renderListItems(i);
     }
@@ -981,21 +958,13 @@
   }
 
   for (let i = 0; i < NUM_LISTS; i++) {
-    const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+    const titleEl = document.querySelector(`.sales-title[data-list="${i}"]`);
     const itemInput = document.querySelector(`.todo-input[data-list="${i}"]`);
     const addBtn = document.querySelector(`.add-item-btn[data-list="${i}"]`);
 
-    titleInput.value = listTitles[i];
-    titleInput.disabled = !editingEnabled;
-
-    titleInput.addEventListener('input', () => {
-      if (!editingEnabled) {
-        titleInput.value = listTitles[i];
-        return;
-      }
-      listTitles[i] = titleInput.value;
-      saveData();
-    });
+    if (titleEl) {
+      titleEl.textContent = listTitles[i];
+    }
 
     const addItem = () => {
       if (!editingEnabled) return;
