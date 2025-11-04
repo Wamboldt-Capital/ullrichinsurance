@@ -497,9 +497,11 @@
   };
 
   const updateEditingState = () => {
+    console.log('updateEditingState called - clockStart:', clockStart, 'editingEnabled:', editingEnabled);
     resetBtn.disabled = !editingEnabled;
     clockStartBtn.disabled = !editingEnabled || clockStart !== null;
     clockStopBtn.disabled = !editingEnabled || clockStart === null;
+    console.log('Button states - Start disabled:', clockStartBtn.disabled, 'Stop disabled:', clockStopBtn.disabled);
 
     document.querySelectorAll('.todo-input').forEach(input => {
       input.disabled = !editingEnabled;
@@ -1030,6 +1032,8 @@
   // Function to update timer displays
   function updateTimerDisplays() {
     const now = Date.now();
+    console.log('updateTimerDisplays called - clockStart:', clockStart, 'clockTotal:', clockTotal);
+
     if (clockStart) {
       const clockSecs = Math.round((now - clockStart)/1000);
       const totalClockSecs = clockTotal + clockSecs;
@@ -1046,7 +1050,9 @@
       }
 
       usedTime.textContent = formatSecs(totalTaskSecs);
-      wastedTime.textContent = formatSecs(Math.max(0, totalClockSecs - totalTaskSecs));
+      const wastedSecs = Math.max(0, totalClockSecs - totalTaskSecs);
+      wastedTime.textContent = formatSecs(wastedSecs);
+      console.log('Clocked IN - totalClock:', totalClockSecs, 'totalTask:', totalTaskSecs, 'wasted:', wastedSecs);
     } else {
       // Show final values when clocked out
       clockedInTime.textContent = formatSecs(clockTotal);
@@ -1057,7 +1063,9 @@
       }
 
       usedTime.textContent = formatSecs(totalTaskSecs);
-      wastedTime.textContent = formatSecs(Math.max(0, clockTotal - totalTaskSecs));
+      const wastedSecs = Math.max(0, clockTotal - totalTaskSecs);
+      wastedTime.textContent = formatSecs(wastedSecs);
+      console.log('Clocked OUT - clockTotal:', clockTotal, 'totalTask:', totalTaskSecs, 'wasted:', wastedSecs);
     }
   }
 
