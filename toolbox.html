@@ -29,7 +29,7 @@
     .timer-value{font-size:1.4rem;font-weight:700;color:#0a84ff;font-variant-numeric:tabular-nums}
     .section-title{font-size:1.1rem;font-weight:700;color:#0b1220;margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid #e6e9ee}
     .tasks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-    .lists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+    .sales-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
     .card{border:1px solid #e6e9ee;border-radius:10px;padding:12px;box-shadow:0 4px 10px rgba(12,18,30,0.03);display:flex;flex-direction:column;gap:8px}
     .section-header{display:flex;align-items:center;justify-content:space-between;min-height:48px}
     .name{font-weight:600;flex:1;white-space:pre-line;font-size:0.95rem}
@@ -44,16 +44,24 @@
     input[type=number]{width:70px;padding:6px}
     .secondary{background:#f3f4f6;border:1px solid #e6e9ee}
     .list-title-wrapper{display:flex;align-items:center;gap:12px;border-bottom:2px solid #e6e9ee;margin-bottom:16px}
-    .list-title{font-size:1.2rem;font-weight:600;border:none;padding:8px 4px;flex:1}
-    .list-title:focus{outline:none}
+    .sales-title{font-size:1.05rem;font-weight:700;color:#0b1220;flex:1;padding:4px 0}
     .list-title-wrapper:focus-within{border-bottom-color:#0a84ff}
     .list-total-header{font-weight:700;font-size:1.1rem;color:#0a84ff;padding:8px 12px;background:white;border-radius:6px;white-space:nowrap}
     .todo-input{flex:1;padding:8px 12px;border:1px solid #e6e9ee;border-radius:6px;font-size:0.95rem}
     .todo-input:focus{outline:none;border-color:#0a84ff}
     .todo-list{display:flex;flex-direction:column;gap:8px}
-    .todo-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9fafb;border-radius:6px}
+    .todo-item{display:flex;align-items:center;gap:12px;padding:8px 12px;background:#f9fafb;border-radius:6px}
     .todo-text{flex:1;font-size:0.95rem}
     .delete-btn{background:#ff3b30;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.85rem}
+    .task-total{font-weight:700;font-size:0.95rem;color:#0a84ff}
+    .task-timer{font-size:0.85rem;color:#0f172a;font-variant-numeric:tabular-nums}
+    .task-item-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+    .task-timer-btn{padding:6px 10px;border-radius:6px;border:0;cursor:pointer;font-size:0.85rem;font-weight:600}
+    .task-timer-btn.start{background:#0a84ff;color:white}
+    .task-timer-btn.start:hover{background:#0077ed}
+    .task-timer-btn.stop{background:#ff3b30;color:white}
+    .task-timer-btn.stop:hover{background:#d32f2f}
+    .task-timer-btn:disabled{opacity:0.5;cursor:not-allowed}
     .status{position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:10px 20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:1000;display:none}
     .status.show{display:block}
     .status.error{background:#ef4444}
@@ -103,8 +111,8 @@
 
     <div class="clock-section">
       <div class="clock-controls">
-        <button id="clockStartBtn" class="clock-btn clock-start">Clock In</button>
-        <button id="clockStopBtn" class="clock-btn clock-stop" disabled>Clock Out</button>
+        <button id="clockStartBtn" class="clock-btn clock-start">Start</button>
+        <button id="clockStopBtn" class="clock-btn clock-stop" disabled>Stop</button>
       </div>
       <div class="timer-displays">
         <div class="timer-display">
@@ -126,10 +134,10 @@
     <div id="tasksGrid" class="tasks-grid"></div>
 
     <h2 class="section-title">Sales</h2>
-    <div class="lists-grid">
+    <div class="sales-grid">
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="0" placeholder="List Title" />
+          <div class="sales-title" data-list="0">New Business Submission</div>
           <span class="list-total-header" data-list="0"></span>
         </div>
         <div class="todo-list" data-list="0"></div>
@@ -140,7 +148,7 @@
       </div>
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="1" placeholder="List Title" />
+          <div class="sales-title" data-list="1">New Business Premium</div>
           <span class="list-total-header" data-list="1"></span>
         </div>
         <div class="todo-list" data-list="1"></div>
@@ -151,7 +159,7 @@
       </div>
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="2" placeholder="List Title" />
+          <div class="sales-title" data-list="2">Requote Submission</div>
           <span class="list-total-header" data-list="2"></span>
         </div>
         <div class="todo-list" data-list="2"></div>
@@ -162,7 +170,7 @@
       </div>
       <div class="card">
         <div class="list-title-wrapper">
-          <input type="text" class="list-title" data-list="3" placeholder="List Title" />
+          <div class="sales-title" data-list="3">Requote Premium</div>
           <span class="list-total-header" data-list="3"></span>
         </div>
         <div class="todo-list" data-list="3"></div>
@@ -366,17 +374,35 @@
     return `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
   };
 
+  const parseJSON = (value, fallback) => {
+    if (value === null || value === undefined || value === '') {
+      return fallback;
+    }
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.error('Error parsing JSON value:', error);
+        return fallback;
+      }
+    }
+    if (typeof value === 'object') {
+      return value;
+    }
+    return fallback;
+  };
+
   const defaultTaskNames = [
     'Automations (Text Blaze)',
     'Daily Follow Ups',
-    'Email/Text responses',
+    'Email/Text Responses',
     'Fixing Post-Bound Policy Issues',
     'In-Bound Calls',
     'Interviews',
     'Jared\'s Automations',
     'Loom Presentations',
-    'New Business/Cross Sales quotes',
-    'Current Client requotes',
+    'New Business/Cross Sales Quotes',
+    'Current Client Requotes',
     'Other'
   ];
 
@@ -387,6 +413,8 @@
     'Requote Premium'
   ];
 
+  const defaultTaskItems = () => Array.from({ length: NUM_TASKS }, () => []);
+
   function createDefaultState() {
     return {
       taskNames: [...defaultTaskNames],
@@ -395,7 +423,8 @@
       clockStart: null,
       clockTotal: 0,
       listTitles: [...defaultListTitles],
-      listData: Array.from({length: NUM_LISTS}, () => ({ items: [] }))
+      listData: Array.from({length: NUM_LISTS}, () => ({ items: [] })),
+      taskItems: defaultTaskItems()
     };
   }
 
@@ -406,29 +435,40 @@
   let clockTotal = 0;
   let listTitles = [...defaultListTitles];
   let listData = Array.from({length: NUM_LISTS}, () => ({ items: [] }));
+  let taskItems = defaultTaskItems();
 
   const useState = (state) => {
-    taskNames = [...state.taskNames];
+    taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => {
+      if (state.taskNames && typeof state.taskNames[idx] === 'string') {
+        return state.taskNames[idx];
+      }
+      return defaultTaskNames[idx];
+    });
     taskTotals = [...state.taskTotals];
     activeTask = state.activeTask ? {...state.activeTask} : null;
     clockStart = state.clockStart || null;
     clockTotal = state.clockTotal || 0;
-    listTitles = [...state.listTitles];
+    listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => {
+      if (state.listTitles && typeof state.listTitles[idx] === 'string') {
+        return state.listTitles[idx];
+      }
+      return defaultListTitles[idx];
+    });
     listData = state.listData.map(l => ({ items: [...l.items] }));
+    taskItems = state.taskItems ? state.taskItems.map(items => items.map(item => ({
+      id: item.id || generateTaskId(),
+      text: item.text || '',
+      total: Number(item.total || 0)
+    }))) : defaultTaskItems();
+    if (typeof recalculateTaskTotals === 'function' && taskItems.some(items => items.length > 0)) {
+      recalculateTaskTotals();
+    }
   };
 
   const updateEditingState = () => {
     resetBtn.disabled = !editingEnabled;
     clockStartBtn.disabled = !editingEnabled || clockStart !== null;
     clockStopBtn.disabled = !editingEnabled || clockStart === null;
-
-    const listTitleEls = document.querySelectorAll('.list-title');
-    listTitleEls.forEach((input, idx) => {
-      input.disabled = !editingEnabled;
-      if (!editingEnabled) {
-        input.value = listTitles[idx];
-      }
-    });
 
     document.querySelectorAll('.todo-input').forEach(input => {
       input.disabled = !editingEnabled;
@@ -440,11 +480,15 @@
       btn.disabled = !editingEnabled;
     });
 
+    document.querySelectorAll('.add-task-btn').forEach(btn => {
+      btn.disabled = !editingEnabled;
+    });
+
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.disabled = !editingEnabled;
     });
 
-    document.querySelectorAll('.btn.start, .btn.stop').forEach(btn => {
+    document.querySelectorAll('.task-timer-btn').forEach(btn => {
       btn.disabled = !editingEnabled || clockStart === null;
     });
   };
@@ -473,7 +517,14 @@
           clock_start: JSON.stringify(clockStart),
           clock_total: clockTotal,
           list_titles: JSON.stringify(listTitles),
-          list_items: JSON.stringify(listData.map(l => l.items))
+          list_items: JSON.stringify({
+            sales: listData.map(l => l.items),
+            tasks: taskItems.map(items => items.map(item => ({
+              id: item.id,
+              text: item.text,
+              total: item.total
+            })))
+          })
         }], {
           onConflict: 'user_id,date'
         });
@@ -519,53 +570,91 @@
       if (data) {
         exists = true;
 
-        try {
-          const parsedNames = JSON.parse(data.names || '[]');
-          state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => parsedNames[idx] || defaultTaskNames[idx]);
-        } catch (e) {
-          console.error('Error parsing task names:', e);
-        }
-
-        try {
-          const parsedTotals = JSON.parse(data.totals || '[]');
-          state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
-        } catch (e) {
-          console.error('Error parsing task totals:', e);
-        }
-
-        try {
-          const loadedActive = JSON.parse(data.active || 'null');
-          if (loadedActive && typeof loadedActive.index === 'number' && loadedActive.start) {
-            state.activeTask = loadedActive;
+        const parsedNames = parseJSON(data.names, []);
+        state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => {
+          if (parsedNames && typeof parsedNames[idx] === 'string') {
+            return parsedNames[idx];
           }
-        } catch (e) {
-          console.error('Error parsing active task:', e);
+          return defaultTaskNames[idx];
+        });
+
+        const parsedTotals = parseJSON(data.totals, []);
+        state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
+
+        const loadedActive = parseJSON(data.active, null);
+        if (loadedActive && loadedActive.start) {
+          if (typeof loadedActive.taskIndex === 'number' && loadedActive.itemId) {
+            state.activeTask = loadedActive;
+          } else if (typeof loadedActive.index === 'number') {
+            state.activeTask = {
+              taskIndex: loadedActive.index,
+              itemId: loadedActive.itemId || null,
+              start: loadedActive.start
+            };
+          }
         }
 
-        try {
-          const loadedClockStart = JSON.parse(data.clock_start || 'null');
-          state.clockStart = loadedClockStart;
-        } catch (e) {
-          console.error('Error parsing clock start:', e);
-        }
-
+        state.clockStart = parseJSON(data.clock_start, null);
         state.clockTotal = Number(data.clock_total || 0);
 
-        try {
-          const parsedTitles = JSON.parse(data.list_titles || '[]');
-          state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => parsedTitles[idx] || defaultListTitles[idx]);
-        } catch (e) {
-          console.error('Error parsing list titles:', e);
-        }
+        const parsedTitles = parseJSON(data.list_titles, []);
+        state.listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => {
+          if (parsedTitles && typeof parsedTitles[idx] === 'string') {
+            return parsedTitles[idx];
+          }
+          return defaultListTitles[idx];
+        });
 
-        try {
-          const parsedItems = JSON.parse(data.list_items || '[]');
+        const parsedItems = parseJSON(data.list_items, []);
+        if (Array.isArray(parsedItems)) {
           state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
             items: Array.isArray(parsedItems[idx]) ? [...parsedItems[idx]] : []
           }));
-        } catch (e) {
-          console.error('Error parsing list items:', e);
+          state.taskItems = defaultTaskItems();
+        } else if (parsedItems && typeof parsedItems === 'object') {
+          const salesItems = Array.isArray(parsedItems.sales)
+            ? parsedItems.sales
+            : [];
+          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
+            items: Array.isArray(salesItems[idx]) ? [...salesItems[idx]] : []
+          }));
+
+          if (Array.isArray(parsedItems.tasks)) {
+            state.taskItems = Array.from({ length: NUM_TASKS }, (_, idx) => {
+              const source = parsedItems.tasks[idx];
+              if (!Array.isArray(source)) return [];
+              return source
+                .filter(item => item && typeof item === 'object')
+                .map(item => ({
+                  id: item.id || generateTaskId(),
+                  text: item.text || '',
+                  total: Number(item.total || 0)
+                }));
+            });
+          } else {
+            state.taskItems = defaultTaskItems();
+          }
+        } else {
+          state.listData = Array.from({ length: NUM_LISTS }, () => ({ items: [] }));
+          state.taskItems = defaultTaskItems();
         }
+      }
+
+      if (state.activeTask) {
+        const { taskIndex, itemId } = state.activeTask;
+        const hasValidItem = typeof taskIndex === 'number'
+          && taskIndex >= 0
+          && taskIndex < NUM_TASKS
+          && itemId
+          && Array.isArray(state.taskItems[taskIndex])
+          && state.taskItems[taskIndex].some(item => item.id === itemId);
+        if (!hasValidItem) {
+          state.activeTask = null;
+        }
+      }
+
+      if (state.taskItems && state.taskItems.some(items => items.length > 0)) {
+        state.taskTotals = state.taskItems.map(items => items.reduce((acc, item) => acc + Number(item.total || 0), 0));
       }
 
       if (apply) {
@@ -582,98 +671,234 @@
   }
 
   // Task box creation and management
-  const taskElems = [];
-  function makeTaskSection(i) {
+  const taskCards = [];
+  const taskItemRefs = Array.from({ length: NUM_TASKS }, () => new Map());
+
+  const generateTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+
+  const findTaskItem = (taskIndex, itemId) => {
+    return taskItems[taskIndex].find(item => item.id === itemId) || null;
+  };
+
+  function makeTaskSection(index) {
     const card = document.createElement('div');
     card.className = 'card';
 
     const header = document.createElement('div');
-    header.className = 'section-header';
+    header.className = 'list-title-wrapper';
 
-    const name = document.createElement('div');
-    name.className = 'name';
-    name.textContent = taskNames[i];
+    const title = document.createElement('div');
+    title.className = 'sales-title';
+    title.textContent = taskNames[index];
 
-    const meta = document.createElement('div');
-    meta.className = 'meta';
+    const total = document.createElement('span');
+    total.className = 'task-total';
+    total.dataset.task = index;
+    total.textContent = `Total Today: ${formatSecs(taskTotals[index])}`;
 
-    const total = document.createElement('div');
-    total.textContent = `Today: ${formatSecs(taskTotals[i])}`;
+    header.appendChild(title);
+    header.appendChild(total);
 
-    const running = document.createElement('div');
-    running.textContent = `Current: 00:00:00`;
+    const list = document.createElement('div');
+    list.className = 'todo-list';
+    list.dataset.task = index;
 
-    meta.appendChild(total);
-    meta.appendChild(running);
+    const inputRow = document.createElement('div');
+    inputRow.style.display = 'flex';
+    inputRow.style.gap = '8px';
+    inputRow.style.marginTop = '12px';
+    inputRow.style.alignItems = 'stretch';
 
-    header.appendChild(name);
-    header.appendChild(meta);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'todo-input';
+    input.dataset.task = index;
+    input.placeholder = 'Add new task...';
+    input.dataset.originalPlaceholder = 'Add new task...';
 
-    const btn = document.createElement('button');
-    btn.className = 'btn start';
-    btn.textContent = 'Start';
-    btn.disabled = clockStart === null;
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn small add-task-btn';
+    addBtn.dataset.task = index;
+    addBtn.textContent = 'Add';
 
-    card.appendChild(header);
-    card.appendChild(btn);
+    const addItem = () => {
+      if (!editingEnabled) return;
+      const text = input.value.trim();
+      if (!text) return;
+      const newItem = { id: generateTaskId(), text, total: 0 };
+      taskItems[index].push(newItem);
+      input.value = '';
+      recalculateTaskTotals();
+      saveData();
+      renderTaskList(index);
+    };
 
-    btn.addEventListener('click', () => {
-      if (!editingEnabled || clockStart === null) return;
-      if (activeTask && activeTask.index === i) {
-        stopActiveTask();
-      } else {
-        startTask(i);
-      }
+    addBtn.addEventListener('click', addItem);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addItem();
     });
 
-    return {card, btn, running, total, name};
+    inputRow.appendChild(input);
+    inputRow.appendChild(addBtn);
+
+    card.appendChild(header);
+    card.appendChild(list);
+    card.appendChild(inputRow);
+
+    tasksGrid.appendChild(card);
+
+    return { card, title, total, list, input, addBtn };
   }
 
-  for (let i=0; i<NUM_TASKS; i++){
-    const obj = makeTaskSection(i);
-    taskElems.push(obj);
-    tasksGrid.appendChild(obj.card);
+  function recalculateTaskTotals() {
+    for (let i = 0; i < NUM_TASKS; i++) {
+      const sum = taskItems[i].reduce((acc, item) => acc + Number(item.total || 0), 0);
+      taskTotals[i] = sum;
+    }
   }
 
-  function refreshTaskTimers() {
-    for (let i=0; i<NUM_TASKS; i++){
-      taskElems[i].name.textContent = taskNames[i];
-      taskElems[i].total.textContent = `Today: ${formatSecs(taskTotals[i])}`;
-      if (activeTask && activeTask.index === i) {
-        taskElems[i].btn.classList.remove('start');
-        taskElems[i].btn.classList.add('stop');
-        taskElems[i].btn.textContent = 'Stop';
-      } else {
-        taskElems[i].btn.classList.remove('stop');
-        taskElems[i].btn.classList.add('start');
-        taskElems[i].btn.textContent = 'Start';
-        taskElems[i].running.textContent = 'Current: 00:00:00';
+  function refreshTaskSection(index, now = Date.now()) {
+    const card = taskCards[index];
+    if (!card) return;
+    card.title.textContent = taskNames[index];
+
+    let runningExtra = 0;
+    const isActiveGroup = activeTask && activeTask.taskIndex === index;
+    if (isActiveGroup) {
+      runningExtra = Math.max(0, Math.round((now - activeTask.start) / 1000));
+    }
+    card.total.textContent = `Total Today: ${formatSecs((taskTotals[index] || 0) + runningExtra)}`;
+
+    const refs = taskItemRefs[index];
+    refs.forEach((ref, itemId) => {
+      const item = findTaskItem(index, itemId);
+      if (!item) return;
+      const isActive = isActiveGroup && activeTask.itemId === itemId;
+      let itemTotal = Number(item.total || 0);
+      if (isActive) {
+        itemTotal += Math.max(0, Math.round((now - activeTask.start) / 1000));
       }
-      taskElems[i].btn.disabled = !editingEnabled || clockStart === null;
+      ref.timerEl.textContent = `Total: ${formatSecs(itemTotal)}`;
+      ref.button.textContent = isActive ? 'Stop' : 'Start';
+      ref.button.classList.toggle('stop', isActive);
+      ref.button.classList.toggle('start', !isActive);
+      ref.button.disabled = !editingEnabled || clockStart === null;
+    });
+  }
+
+  function refreshAllTaskSections(now = Date.now()) {
+    for (let i = 0; i < NUM_TASKS; i++) {
+      refreshTaskSection(i, now);
     }
   }
 
-  function startTask(i) {
-    if (!editingEnabled || clockStart === null) return;
-    const now = Date.now();
-    if (activeTask && activeTask.index !== i) {
-      const delta = Math.round((now - activeTask.start)/1000);
-      taskTotals[activeTask.index] = (taskTotals[activeTask.index]||0) + delta;
-    }
-    activeTask = {index:i, start: now};
-    saveData();
-    refreshTaskTimers();
+  function renderTaskList(index) {
+    const card = taskCards[index];
+    if (!card) return;
+    const listEl = card.list;
+    listEl.innerHTML = '';
+    taskItemRefs[index].clear();
+
+    taskItems[index].forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'todo-item';
+
+      const textEl = document.createElement('div');
+      textEl.className = 'todo-text';
+      textEl.textContent = item.text;
+
+      const actions = document.createElement('div');
+      actions.className = 'task-item-actions';
+
+      const timerEl = document.createElement('div');
+      timerEl.className = 'task-timer';
+      timerEl.textContent = `Total: ${formatSecs(Number(item.total || 0))}`;
+
+      const startBtn = document.createElement('button');
+      startBtn.className = 'task-timer-btn start';
+      startBtn.textContent = 'Start';
+      startBtn.disabled = !editingEnabled || clockStart === null;
+      startBtn.addEventListener('click', () => {
+        if (!editingEnabled || clockStart === null) return;
+        toggleTaskItem(index, item.id);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.disabled = !editingEnabled;
+      deleteBtn.addEventListener('click', () => {
+        if (!editingEnabled) return;
+        const now = Date.now();
+        if (activeTask && activeTask.taskIndex === index && activeTask.itemId === item.id) {
+          finalizeActiveTask(now, { skipSave: true });
+        }
+        taskItems[index] = taskItems[index].filter(existing => existing.id !== item.id);
+        recalculateTaskTotals();
+        saveData();
+        renderTaskList(index);
+      });
+
+      actions.appendChild(timerEl);
+      actions.appendChild(startBtn);
+
+      row.appendChild(textEl);
+      row.appendChild(actions);
+      row.appendChild(deleteBtn);
+
+      listEl.appendChild(row);
+
+      taskItemRefs[index].set(item.id, { timerEl, button: startBtn });
+    });
+
+    refreshTaskSection(index);
   }
 
-  function stopActiveTask() {
-    if (!editingEnabled) return;
+  function finalizeActiveTask(now = Date.now(), { skipSave = false } = {}) {
     if (!activeTask) return;
-    const now = Date.now();
-    const delta = Math.round((now - activeTask.start)/1000);
-    taskTotals[activeTask.index] = (taskTotals[activeTask.index]||0) + delta;
+    const { taskIndex, itemId, start } = activeTask;
+    const item = findTaskItem(taskIndex, itemId);
+    if (item) {
+      const delta = Math.max(0, Math.round((now - start) / 1000));
+      item.total = Number(item.total || 0) + delta;
+    }
     activeTask = null;
+    recalculateTaskTotals();
+    if (!skipSave) {
+      saveData();
+      refreshAllTaskSections(now);
+    }
+  }
+
+  function startTaskItem(taskIndex, itemId) {
+    if (!editingEnabled || clockStart === null) return;
+    const targetItem = findTaskItem(taskIndex, itemId);
+    if (!targetItem) return;
+    const now = Date.now();
+    if (activeTask) {
+      if (activeTask.taskIndex === taskIndex && activeTask.itemId === itemId) {
+        finalizeActiveTask(now);
+        return;
+      }
+      finalizeActiveTask(now, { skipSave: true });
+    }
+    activeTask = { taskIndex, itemId, start: now };
     saveData();
-    refreshTaskTimers();
+    refreshAllTaskSections(now);
+  }
+
+  function toggleTaskItem(taskIndex, itemId) {
+    if (!editingEnabled || clockStart === null) return;
+    if (activeTask && activeTask.taskIndex === taskIndex && activeTask.itemId === itemId) {
+      finalizeActiveTask();
+    } else {
+      startTaskItem(taskIndex, itemId);
+    }
+  }
+
+  for (let i = 0; i < NUM_TASKS; i++) {
+    const card = makeTaskSection(i);
+    taskCards.push(card);
   }
 
   // Clock management
@@ -682,7 +907,7 @@
     clockStart = Date.now();
     clockStartBtn.disabled = true;
     clockStopBtn.disabled = false;
-    document.querySelectorAll('.btn.start, .btn.stop').forEach(btn => {
+    document.querySelectorAll('.task-timer-btn').forEach(btn => {
       btn.disabled = false;
     });
     saveData();
@@ -696,19 +921,17 @@
 
     // Stop active task if any
     if (activeTask) {
-      const taskDelta = Math.round((now - activeTask.start)/1000);
-      taskTotals[activeTask.index] = (taskTotals[activeTask.index]||0) + taskDelta;
-      activeTask = null;
+      finalizeActiveTask(now, { skipSave: true });
     }
 
     clockStart = null;
     clockStartBtn.disabled = false;
     clockStopBtn.disabled = true;
-    document.querySelectorAll('.btn.start, .btn.stop').forEach(btn => {
+    document.querySelectorAll('.task-timer-btn').forEach(btn => {
       btn.disabled = true;
     });
     saveData();
-    refreshTaskTimers();
+    refreshAllTaskSections(now);
   }
 
   clockStartBtn.addEventListener('click', clockIn);
@@ -716,17 +939,13 @@
 
   // Update timers every 500ms
   setInterval(()=> {
-    // Update task timer if active
+    const now = Date.now();
     if (activeTask) {
-      const now = Date.now();
-      const sec = Math.round((now - activeTask.start)/1000);
-      taskElems[activeTask.index].running.textContent = `Current: ${formatSecs(sec)}`;
-      taskElems[activeTask.index].total.textContent = `Today: ${formatSecs(taskTotals[activeTask.index] + sec)}`;
+      refreshTaskSection(activeTask.taskIndex, now);
     }
 
     // Update clock timers
     if (clockStart) {
-      const now = Date.now();
       const clockSecs = Math.round((now - clockStart)/1000);
       const totalClockSecs = clockTotal + clockSecs;
       clockedInTime.textContent = formatSecs(totalClockSecs);
@@ -757,7 +976,7 @@
     }
   }, 500);
 
-  const renderListItems = (index) => {
+  const renderSalesList = (index) => {
     const todoListEl = document.querySelector(`.todo-list[data-list="${index}"]`);
     const totalEl = document.querySelector(`.list-total-header[data-list="${index}"]`);
     const hasTotals = index === 1 || index === 3; // New Business Premium and Requote Premium
@@ -788,7 +1007,7 @@
         if (!editingEnabled) return;
         listData[index].items.splice(idx, 1);
         saveData();
-        renderListItems(index);
+        renderSalesList(index);
       });
       
       div.appendChild(text);
@@ -806,13 +1025,15 @@
   };
 
   function applyStateToUI() {
-    refreshTaskTimers();
+    for (let i = 0; i < NUM_TASKS; i++) {
+      renderTaskList(i);
+    }
     for (let i = 0; i < NUM_LISTS; i++) {
-      const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
-      if (titleInput) {
-        titleInput.value = listTitles[i];
+      const titleEl = document.querySelector(`.sales-title[data-list="${i}"]`);
+      if (titleEl) {
+        titleEl.textContent = listTitles[i];
       }
-      renderListItems(i);
+      renderSalesList(i);
     }
     updateEditingState();
   }
@@ -981,21 +1202,13 @@
   }
 
   for (let i = 0; i < NUM_LISTS; i++) {
-    const titleInput = document.querySelector(`.list-title[data-list="${i}"]`);
+    const titleEl = document.querySelector(`.sales-title[data-list="${i}"]`);
     const itemInput = document.querySelector(`.todo-input[data-list="${i}"]`);
     const addBtn = document.querySelector(`.add-item-btn[data-list="${i}"]`);
 
-    titleInput.value = listTitles[i];
-    titleInput.disabled = !editingEnabled;
-
-    titleInput.addEventListener('input', () => {
-      if (!editingEnabled) {
-        titleInput.value = listTitles[i];
-        return;
-      }
-      listTitles[i] = titleInput.value;
-      saveData();
-    });
+    if (titleEl) {
+      titleEl.textContent = listTitles[i];
+    }
 
     const addItem = () => {
       if (!editingEnabled) return;
@@ -1004,7 +1217,7 @@
       listData[i].items.push(text);
       itemInput.value = '';
       saveData();
-      renderListItems(i);
+      renderSalesList(i);
     };
 
     addBtn.disabled = !editingEnabled;
@@ -1015,7 +1228,7 @@
       if (e.key === 'Enter') addItem();
     });
 
-    renderListItems(i);
+    renderSalesList(i);
   }
 
   historySelect.addEventListener('change', async () => {
@@ -1048,7 +1261,7 @@
       // Add task data
       if (rowIdx < NUM_TASKS) {
         let taskSecs = taskTotals[rowIdx];
-        if (activeTask && activeTask.index === rowIdx) {
+        if (activeTask && activeTask.taskIndex === rowIdx) {
           const now = Date.now();
           taskSecs += Math.round((now - activeTask.start)/1000);
         }
@@ -1131,6 +1344,7 @@
 
     // Reset tasks
     taskTotals = Array.from({length: NUM_TASKS}, () => 0);
+    taskItems = defaultTaskItems();
     activeTask = null;
 
     // Reset clock
@@ -1142,11 +1356,15 @@
     // Reset sales lists
     for (let i = 0; i < NUM_LISTS; i++) {
       listData[i].items = [];
-      renderListItems(i);
+      renderSalesList(i);
+    }
+
+    for (let i = 0; i < NUM_TASKS; i++) {
+      renderTaskList(i);
     }
 
     saveData();
-    refreshTaskTimers();
+    refreshAllTaskSections();
   });
 
   await loadData(currentViewDate, { apply: true });
