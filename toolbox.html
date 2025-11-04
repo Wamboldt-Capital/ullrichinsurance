@@ -1001,6 +1001,7 @@
     document.querySelectorAll('.task-timer-btn').forEach(btn => {
       btn.disabled = false;
     });
+    updateTimerDisplays();
     saveData();
   }
 
@@ -1021,6 +1022,7 @@
     document.querySelectorAll('.task-timer-btn').forEach(btn => {
       btn.disabled = true;
     });
+    updateTimerDisplays(now);
     saveData();
     refreshAllTaskSections(now);
   }
@@ -1028,14 +1030,8 @@
   clockStartBtn.addEventListener('click', clockIn);
   clockStopBtn.addEventListener('click', clockOut);
 
-  // Update timers every 500ms
-  setInterval(()=> {
-    const now = Date.now();
-    if (activeTask) {
-      refreshTaskSection(activeTask.taskIndex, now);
-    }
-
-    // Update clock timers
+  // Function to update timer displays
+  function updateTimerDisplays(now = Date.now()) {
     if (clockStart) {
       const clockSecs = Math.round((now - clockStart)/1000);
       const totalClockSecs = clockTotal + clockSecs;
@@ -1065,6 +1061,17 @@
       usedTime.textContent = formatSecs(totalTaskSecs);
       wastedTime.textContent = formatSecs(clockTotal - totalTaskSecs);
     }
+  }
+
+  // Update timers every 500ms
+  setInterval(()=> {
+    const now = Date.now();
+    if (activeTask) {
+      refreshTaskSection(activeTask.taskIndex, now);
+    }
+
+    // Update clock timers
+    updateTimerDisplays(now);
   }, 500);
 
   const renderSalesList = (index) => {
@@ -1126,6 +1133,7 @@
       }
       renderSalesList(i);
     }
+    updateTimerDisplays();
     updateEditingState();
   }
 
@@ -1455,6 +1463,7 @@
       renderTaskList(i);
     }
 
+    updateTimerDisplays();
     saveData();
     refreshAllTaskSections();
   });
