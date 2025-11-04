@@ -289,6 +289,23 @@
   // ORIGINAL TOOLBOX CODE BELOW
   const NUM_TASKS = 11;
   const NUM_LISTS = 4;
+
+  function generateTaskId() {
+    return `task-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  }
+
+  function sanitizeTaskItems(source) {
+    return Array.from({ length: NUM_TASKS }, (_, idx) => {
+      const rawItems = Array.isArray(source && source[idx]) ? source[idx] : [];
+      return rawItems
+        .filter(item => item && typeof item === 'object')
+        .map(item => ({
+          id: typeof item.id === 'string' && item.id ? item.id : generateTaskId(),
+          text: typeof item.text === 'string' ? item.text : String(item.text ?? ''),
+          total: Number(item.total || 0)
+        }));
+    });
+  }
   const tasksGrid = document.getElementById('tasksGrid');
   const exportBtn = document.getElementById('exportBtn');
   const resetBtn = document.getElementById('resetBtn');
@@ -413,7 +430,7 @@
     'Requote Premium'
   ];
 
-  const defaultTaskItems = () => Array.from({ length: NUM_TASKS }, () => []);
+  const defaultTaskItems = () => sanitizeTaskItems([]);
 
   function createDefaultState() {
     return {
@@ -444,7 +461,12 @@
       }
       return defaultTaskNames[idx];
     });
-    taskTotals = [...state.taskTotals];
+    taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => {
+      if (state.taskTotals && typeof state.taskTotals[idx] !== 'undefined') {
+        return Number(state.taskTotals[idx] || 0);
+      }
+      return 0;
+    });
     activeTask = state.activeTask ? {...state.activeTask} : null;
     clockStart = state.clockStart || null;
     clockTotal = state.clockTotal || 0;
@@ -454,12 +476,12 @@
       }
       return defaultListTitles[idx];
     });
-    listData = state.listData.map(l => ({ items: [...l.items] }));
-    taskItems = state.taskItems ? state.taskItems.map(items => items.map(item => ({
-      id: item.id || generateTaskId(),
-      text: item.text || '',
-      total: Number(item.total || 0)
-    }))) : defaultTaskItems();
+    listData = Array.from({ length: NUM_LISTS }, (_, idx) => {
+      const source = state.listData && state.listData[idx];
+      const items = source && Array.isArray(source.items) ? source.items : [];
+      return { items: [...items] };
+    });
+    taskItems = sanitizeTaskItems(state.taskItems);
     if (typeof recalculateTaskTotals === 'function' && taskItems.some(items => items.length > 0)) {
       recalculateTaskTotals();
     }
@@ -506,12 +528,23 @@
     if (!supabase || isHistoryView) return;
     try {
       const today = todayKey();
+      const serializedTaskItems = taskItems.map(items => items.map(item => ({
+        id: item.id,
+        text: item.text,
+        total: Number(item.total || 0)
+      })));
+      const namesPayload = {
+        version: 2,
+        names: taskNames,
+        taskItems: serializedTaskItems,
+        tasks: serializedTaskItems
+      };
       const { error } = await supabase
         .from('work_data')
-        .upsert([{
+        .upsert([{ 
           user_id: USER_ID,
           date: today,
-          names: JSON.stringify(taskNames),
+          names: JSON.stringify(namesPayload),
           totals: JSON.stringify(taskTotals),
           active: JSON.stringify(activeTask),
           clock_start: JSON.stringify(clockStart),
@@ -570,10 +603,28 @@
       if (data) {
         exists = true;
 
-        const parsedNames = parseJSON(data.names, []);
+        const parsedNamesRaw = parseJSON(data.names, []);
+        let candidateNames = null;
+        let taskItemsFromNames = null;
+
+        if (Array.isArray(parsedNamesRaw)) {
+          candidateNames = parsedNamesRaw;
+        } else if (parsedNamesRaw && typeof parsedNamesRaw === 'object') {
+          if (Array.isArray(parsedNamesRaw.names)) {
+            candidateNames = parsedNamesRaw.names;
+          } else if (Array.isArray(parsedNamesRaw.taskNames)) {
+            candidateNames = parsedNamesRaw.taskNames;
+          }
+
+          const rawTaskItems = parsedNamesRaw.taskItems || parsedNamesRaw.tasks;
+          if (rawTaskItems) {
+            taskItemsFromNames = sanitizeTaskItems(rawTaskItems);
+          }
+        }
+
         state.taskNames = Array.from({ length: NUM_TASKS }, (_, idx) => {
-          if (parsedNames && typeof parsedNames[idx] === 'string') {
-            return parsedNames[idx];
+          if (candidateNames && typeof candidateNames[idx] === 'string') {
+            return candidateNames[idx];
           }
           return defaultTaskNames[idx];
         });
@@ -606,38 +657,25 @@
         });
 
         const parsedItems = parseJSON(data.list_items, []);
-        if (Array.isArray(parsedItems)) {
-          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
-            items: Array.isArray(parsedItems[idx]) ? [...parsedItems[idx]] : []
-          }));
-          state.taskItems = defaultTaskItems();
-        } else if (parsedItems && typeof parsedItems === 'object') {
-          const salesItems = Array.isArray(parsedItems.sales)
-            ? parsedItems.sales
-            : [];
-          state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
-            items: Array.isArray(salesItems[idx]) ? [...salesItems[idx]] : []
-          }));
+        let salesSource = null;
+        let taskItemsFromLists = null;
 
-          if (Array.isArray(parsedItems.tasks)) {
-            state.taskItems = Array.from({ length: NUM_TASKS }, (_, idx) => {
-              const source = parsedItems.tasks[idx];
-              if (!Array.isArray(source)) return [];
-              return source
-                .filter(item => item && typeof item === 'object')
-                .map(item => ({
-                  id: item.id || generateTaskId(),
-                  text: item.text || '',
-                  total: Number(item.total || 0)
-                }));
-            });
-          } else {
-            state.taskItems = defaultTaskItems();
+        if (Array.isArray(parsedItems)) {
+          salesSource = parsedItems;
+        } else if (parsedItems && typeof parsedItems === 'object') {
+          salesSource = Array.isArray(parsedItems.sales) ? parsedItems.sales : parsedItems;
+          const rawListTasks = parsedItems.tasks || parsedItems.taskItems;
+          if (rawListTasks) {
+            taskItemsFromLists = sanitizeTaskItems(rawListTasks);
           }
-        } else {
-          state.listData = Array.from({ length: NUM_LISTS }, () => ({ items: [] }));
-          state.taskItems = defaultTaskItems();
         }
+
+        state.listData = Array.from({ length: NUM_LISTS }, (_, idx) => ({
+          items: Array.isArray(salesSource && salesSource[idx]) ? [...salesSource[idx]] : []
+        }));
+
+        const resolvedTaskItems = taskItemsFromNames || taskItemsFromLists;
+        state.taskItems = resolvedTaskItems ? resolvedTaskItems : defaultTaskItems();
       }
 
       if (state.activeTask) {
@@ -673,8 +711,6 @@
   // Task box creation and management
   const taskCards = [];
   const taskItemRefs = Array.from({ length: NUM_TASKS }, () => new Map());
-
-  const generateTaskId = () => `task-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 
   const findTaskItem = (taskIndex, itemId) => {
     return taskItems[taskIndex].find(item => item.id === itemId) || null;
