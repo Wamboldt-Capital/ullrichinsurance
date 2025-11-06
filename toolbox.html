@@ -245,11 +245,14 @@
   }
 
   // Timeout wrapper for promises
-  function withTimeout(promise, timeoutMs = 10000) {
+  function withTimeout(promise, timeoutMs = 5000) {
     return Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
+        setTimeout(() => {
+          console.error(`Timeout triggered after ${timeoutMs}ms`);
+          reject(new Error('Operation timed out'));
+        }, timeoutMs)
       )
     ]);
   }
@@ -291,7 +294,7 @@
   let user = null;
   try {
     console.log('Starting session validation...');
-    user = await withTimeout(validateSession(sessionToken), 10000);
+    user = await withTimeout(validateSession(sessionToken), 5000);
   } catch (error) {
     console.error('Session validation timed out or failed:', error);
     showError('Unable to validate session. Please check your connection and try again.');
