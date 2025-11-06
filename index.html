@@ -286,11 +286,26 @@
             }
         });
 
+        // Timeout wrapper for promises
+        function withTimeout(promise, timeoutMs = 10000) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) =>
+                    setTimeout(() => {
+                        console.error(`Login timeout triggered after ${timeoutMs}ms`);
+                        reject(new Error('Request timed out. Please check your connection.'));
+                    }, timeoutMs)
+                )
+            ]);
+        }
+
         document.getElementById('loginBtn').addEventListener('click', async function() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
             const errorMessage = document.getElementById('errorMessage');
+            const loginBtn = this;
+
             errorMessage.textContent = '';
 
             if (!username || !password) {
@@ -299,10 +314,20 @@
             }
 
             try {
+                loginBtn.textContent = 'Signing in...';
+                loginBtn.disabled = true;
+
+                console.log('Starting login for user:', username);
                 const passwordHash = await hashPassword(password);
-                const result = await supabaseClient.from('users').select('*').eq('username', username);
+
+                console.log('Querying database...');
+                const result = await withTimeout(
+                    supabaseClient.from('users').select('*').eq('username', username),
+                    10000
+                );
 
                 if (result.error) {
+                    console.error('Database error:', result.error);
                     errorMessage.textContent = 'Database error: ' + result.error.message;
                     return;
                 }
@@ -319,21 +344,27 @@
                     return;
                 }
 
-                const sessionToken = await createSession(username, rememberMe);
+                console.log('Creating session...');
+                const sessionToken = await withTimeout(createSession(username, rememberMe), 10000);
                 if (!sessionToken) {
                     errorMessage.textContent = 'Failed to create session';
                     return;
                 }
 
+                console.log('Login successful!');
                 currentUser = user;
-                
+
                 if (user.is_admin) {
                     showAdminPanel();
                 } else {
                     redirectToToolbox();
                 }
             } catch (err) {
+                console.error('Login error:', err);
                 errorMessage.textContent = 'Login failed: ' + err.message;
+            } finally {
+                loginBtn.textContent = 'Sign In';
+                loginBtn.disabled = false;
             }
         });
 
@@ -344,19 +375,32 @@
         });
 
         window.addEventListener('load', async function() {
-            await cleanupExpiredSessions();
+            try {
+                console.log('Cleaning up expired sessions...');
+                await withTimeout(cleanupExpiredSessions(), 5000);
+            } catch (err) {
+                console.warn('Session cleanup failed:', err);
+            }
 
             const sessionToken = localStorage.getItem('sessionToken') || sessionStorage.getItem('sessionToken');
             if (sessionToken) {
-                const user = await validateSession(sessionToken);
-                if (user) {
-                    currentUser = user;
-                    if (currentUser.is_admin) {
-                        showAdminPanel();
+                try {
+                    console.log('Validating existing session...');
+                    const user = await withTimeout(validateSession(sessionToken), 10000);
+                    if (user) {
+                        currentUser = user;
+                        if (currentUser.is_admin) {
+                            showAdminPanel();
+                        } else {
+                            redirectToToolbox();
+                        }
                     } else {
-                        redirectToToolbox();
+                        console.log('Session invalid, clearing...');
+                        localStorage.removeItem('sessionToken');
+                        sessionStorage.removeItem('sessionToken');
                     }
-                } else {
+                } catch (err) {
+                    console.error('Session validation timed out:', err);
                     localStorage.removeItem('sessionToken');
                     sessionStorage.removeItem('sessionToken');
                 }
