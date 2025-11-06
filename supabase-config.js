@@ -5,6 +5,6 @@ window.TOOLBOX_SUPABASE_CONFIG = window.TOOLBOX_SUPABASE_CONFIG || {
    * and redeploy the site so both the login and toolbox pages use the
    * new backend.
    */
-  url: 'https://pfndqoqcbzmezckedigl.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmbmRxb3FjYnptZXpja2VkaWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyMjMyNDMsImV4cCI6MjA3Nzc5OTI0M30.Y72Sr9hFc5lTjpATBXJzOpmTMc1RqyhJkR5i3ohnRlo'
+  url: 'https://nggpymtnuuxfvgcuzemd.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nZ3B5bXRudXV4ZnZnY3V6ZW1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzMxMDksImV4cCI6MjA3NjIwOTEwOX0.6ihxow3cJH5ONA1UV1UTM4xKMASWLLrN424FZ6IORAI'
 };

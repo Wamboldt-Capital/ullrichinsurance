@@ -412,6 +412,9 @@
         return fallback;
       }
     }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return value;
+    }
     if (typeof value === 'object') {
       return value;
     }
@@ -440,6 +443,28 @@
   ];
 
   const defaultTaskItems = () => sanitizeTaskItems([]);
+
+  const normalizeTimestamp = (value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    if (value && typeof value === 'object') {
+      if (value.value !== undefined) {
+        return normalizeTimestamp(value.value);
+      }
+      if (value.start !== undefined) {
+        return normalizeTimestamp(value.start);
+      }
+      if (value.timestamp !== undefined) {
+        return normalizeTimestamp(value.timestamp);
+      }
+    }
+    return null;
+  };
 
   function createDefaultState() {
     return {
@@ -477,7 +502,9 @@
       return 0;
     });
     activeTask = state.activeTask ? {...state.activeTask} : null;
-    clockStart = state.clockStart || null;
+    clockStart = typeof state.clockStart === 'number' && Number.isFinite(state.clockStart)
+      ? state.clockStart
+      : null;
     clockTotal = state.clockTotal || 0;
     listTitles = Array.from({ length: NUM_LISTS }, (_, idx) => {
       if (state.listTitles && typeof state.listTitles[idx] === 'string') {
@@ -688,7 +715,7 @@
         state.taskTotals = Array.from({ length: NUM_TASKS }, (_, idx) => Number(parsedTotals[idx] || 0));
 
         const loadedActive = parseJSON(data.active, null);
-        if (loadedActive && loadedActive.start) {
+        if (loadedActive && loadedActive.start !== undefined) {
           if (typeof loadedActive.taskIndex === 'number' && loadedActive.itemId) {
             state.activeTask = loadedActive;
           } else if (typeof loadedActive.index === 'number') {
@@ -700,7 +727,8 @@
           }
         }
 
-        state.clockStart = parseJSON(data.clock_start, null);
+        const rawClockStart = parseJSON(data.clock_start, null);
+        state.clockStart = normalizeTimestamp(rawClockStart);
         state.clockTotal = Number(data.clock_total || 0);
 
         const parsedTitles = parseJSON(data.list_titles, []);
@@ -731,6 +759,15 @@
 
         const resolvedTaskItems = taskItemsFromNames || taskItemsFromLists;
         state.taskItems = resolvedTaskItems ? resolvedTaskItems : defaultTaskItems();
+      }
+
+      if (state.activeTask) {
+        const normalizedStart = normalizeTimestamp(state.activeTask.start);
+        if (normalizedStart !== null) {
+          state.activeTask.start = normalizedStart;
+        } else {
+          state.activeTask = null;
+        }
       }
 
       if (state.activeTask) {
@@ -1024,12 +1061,19 @@
     });
     saveData();
     refreshAllTaskSections(now);
-    updateTimerDisplays();
   }
 
-  // Function to update timer displays
-  function updateTimerDisplays() {
+  clockStartBtn.addEventListener('click', clockIn);
+  clockStopBtn.addEventListener('click', clockOut);
+
+  // Update timers every 500ms
+  setInterval(()=> {
     const now = Date.now();
+    if (activeTask) {
+      refreshTaskSection(activeTask.taskIndex, now);
+    }
+
+    // Update clock timers
     if (clockStart) {
       const clockSecs = Math.round((now - clockStart)/1000);
       const totalClockSecs = clockTotal + clockSecs;
