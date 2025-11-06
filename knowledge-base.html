@@ -455,6 +455,26 @@
         <p>Loading Knowledge Base...</p>
     </div>
 
+    <script>
+        // Failsafe: If loading screen is still visible after 8 seconds, show error
+        setTimeout(function() {
+            var loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen && loadingScreen.style.display !== 'none' &&
+                window.getComputedStyle(loadingScreen).display !== 'none') {
+                console.error('Failsafe timeout triggered - session validation took too long');
+                loadingScreen.style.display = 'none';
+                var errorScreen = document.getElementById('errorScreen');
+                var errorMessage = document.getElementById('errorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = 'Session validation timed out. Please check your internet connection and try again.';
+                }
+                if (errorScreen) {
+                    errorScreen.style.display = 'block';
+                }
+            }
+        }, 8000);
+    </script>
+
     <div class="error-screen" id="errorScreen">
         <h2>⚠️ Access Denied</h2>
         <p id="errorMessage">Your session is invalid or has expired.</p>
